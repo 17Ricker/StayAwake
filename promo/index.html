@@ -6,6 +6,7 @@
     <title>StayAwake — promo</title>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
     <style>
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/JetBrainsMono.ttf") format("truetype"); font-weight: 100 800; }
       @font-face { font-family: "Figtree"; src: url("assets/fonts/Figtree.ttf") format("truetype"); font-weight: 300 900; }
       :root { --ground: #0e0f12; --ground-2: #16171b; --ink: #f1ece4; --dim: #9a958c; --orange: #ee7b3f; --red: #e5484d; --font: "Figtree", sans-serif; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,7 +73,7 @@
       #s6-list p { font-size: 64px; font-weight: 800; letter-spacing: -0.01em; }
       #s6-list b { color: var(--orange); }
       #s6-term { position: absolute; top: 620px; left: 0; right: 0; margin: 0 auto; width: 1760px; border-radius: 22px; background: #0a0b0d;
-                  border: 2px solid #2a2b31; padding: 40px 48px; font-family: monospace; font-size: 28px; line-height: 1.65; color: #d8d3ca; }
+                  border: 2px solid #2a2b31; padding: 40px 48px; font-family: "JetBrains Mono", monospace; font-size: 28px; line-height: 1.65; color: #d8d3ca; }
       #s6-term .p { color: var(--orange); }
       #s6-term .c { color: var(--dim); }
 
@@ -160,7 +161,10 @@
         </div>
         <div id="s6-term">
           <div id="s6-l1"><span class="p">$</span> sudo cat /etc/sudoers.d/stayawake-uid501</div>
-          <div id="s6-l2" class="c">#501 ALL=(root) NOPASSWD: /usr/bin/pmset -a disablesleep 0, /usr/bin/pmset -a disablesleep 1</div>
+          <div id="s6-l2" class="c">
+            <div># StayAwake: mario</div>
+            <div>#501 ALL=(root) NOPASSWD: /usr/bin/pmset -a disablesleep 0, /usr/bin/pmset -a disablesleep 1</div>
+          </div>
           <div id="s6-l3"><span class="p">$</span> gh attestation verify StayAwake.zip -R ricky7x/StayAwake <span id="s6-caret" class="p">▍</span></div>
         </div>
       </section>
