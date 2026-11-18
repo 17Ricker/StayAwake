@@ -56,7 +56,7 @@ StayAwake mantiene el Mac encendido con la tapa cerrada, exactamente el tiempo q
 - **Protección térmica:** se detiene si macOS indica una temperatura crítica.
 - **A prueba de cierres inesperados:** si la app se cierra de golpe o se fuerza su salida, un pequeño proceso en segundo plano devuelve el reposo a la normalidad en un par de segundos.
 - Al salir, siempre devuelve el reposo a la normalidad.
-- **Pantalla siempre encendida**, **Abrir al iniciar sesión** y **Quitar permiso** con un clic.
+- **Pantalla siempre encendida**, **Abrir al iniciar sesión** y **Quitar permiso** están en Ajustes (quitarlo pide la contraseña de administrador).
 
 <br clear="right">
 
@@ -72,9 +72,7 @@ StayAwake mantiene el Mac encendido con la tapa cerrada, exactamente el tiempo q
 
 **Ajustes → Idioma**: Sistema, Italiano, English, Español. *Sistema* sigue el idioma de macOS, o el inglés si no es ninguno de estos. El cambio es inmediato.
 
-## Mira el anuncio
-
-<!-- video: el anuncio de 40 segundos se adjunta aquí tras la primera versión -->
+<!-- ## Mira el anuncio (video): si attiva dopo la prima release, quando lo spot è allegato -->
 
 ## Cómo funciona
 

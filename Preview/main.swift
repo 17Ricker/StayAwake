@@ -62,11 +62,13 @@ MainActor.assumeIsolated {
         for m in [30, 60, 90, 120] {
             save(card(make { c in c.theme = .night; c.duration = m }), as: "night-idle-\(m)")
         }
-        for (i, r) in [7198, 7197, 7196, 7195].enumerated() {
-            save(card(make { c in
-                c.theme = .night; c.mode = .timed; c.total = 7200; c.remaining = TimeInterval(r)
-                c.endDate = base.addingTimeInterval(TimeInterval(r))
-            }), as: "night-timed-\(i + 1)")
+        // Timer da 2 h con 1:18:00 rimasti (35%): la pillola della barra si rende dallo stesso stato.
+        @MainActor func timed(_ c: Controller, _ r: Int) {
+            c.theme = .night; c.mode = .timed; c.total = 7200; c.remaining = TimeInterval(r)
+            c.endDate = base.addingTimeInterval(TimeInterval(r))
+        }
+        for (i, r) in [4680, 4679, 4678, 4677].enumerated() {
+            save(card(make { c in timed(c, r) }), as: "night-timed-\(i + 1)")
         }
         save(card(make { c in c.theme = .night; c.mode = .indefinite }), as: "night-continuous")
         save(card(make { c in c.theme = .retro; c.duration = 90 }), as: "retro-idle")
@@ -91,7 +93,10 @@ MainActor.assumeIsolated {
         }
         let t = Strings.for(lang)
         savePNG(MenuBarArt.idle(t.summaryOff), "menubar-idle", white: true)
-        savePNG(MenuBarArt.pill(timed: true, progress: 0.35, title: "1h 18m", summary: t.summaryTimed("1h 18m")), "menubar-timed", white: false)
+        let pillState = Controller()
+        pillState.language = lang
+        timed(pillState, 4680)
+        savePNG(MenuBarArt.image(for: pillState), "menubar-timed", white: false)
         return
     }
 

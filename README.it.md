@@ -56,7 +56,7 @@ StayAwake tiene il Mac acceso a coperchio chiuso, esattamente per il tempo che s
 - **Protezione temperatura:** si ferma se macOS segnala una temperatura critica.
 - **A prova di crash:** se l'app crasha o viene chiusa a forza, un piccolo processo in background riporta lo sleep alla normalità entro un paio di secondi.
 - Quando esci, riporta sempre lo sleep alla normalità.
-- **Schermo sempre acceso**, **Avvia al login** e **Rimuovi permesso** con un clic.
+- **Schermo sempre acceso**, **Avvia al login** e **Rimuovi permesso** sono nelle Impostazioni (la rimozione chiede la password admin).
 
 <br clear="right">
 
@@ -72,9 +72,7 @@ StayAwake tiene il Mac acceso a coperchio chiuso, esattamente per il tempo che s
 
 **Impostazioni → Lingua**: Sistema, Italiano, English, Español. *Sistema* segue la lingua di macOS, oppure l'inglese se non è nessuna di queste. Il cambio è immediato.
 
-## Guarda lo spot
-
-<!-- video: lo spot di 40 secondi viene allegato qui dopo la prima release -->
+<!-- ## Guarda lo spot (video): si attiva dopo la prima release, quando lo spot è allegato -->
 
 ## Come funziona
 

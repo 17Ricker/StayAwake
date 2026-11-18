@@ -56,7 +56,7 @@ StayAwake keeps the Mac awake with the lid closed, for exactly as long as you ch
 - **Heat protection:** it stops if macOS reports a critical temperature.
 - **Crash-proof:** if the app crashes or is force-quit, a tiny background process restores normal sleep within a couple of seconds.
 - It always restores normal sleep when you quit.
-- **Keep display on**, **Open at login**, and **Remove permission** in one click.
+- **Keep display on**, **Open at login** and **Remove permission** are all in Settings (removing asks for the admin password).
 
 <br clear="right">
 
@@ -72,9 +72,7 @@ StayAwake keeps the Mac awake with the lid closed, for exactly as long as you ch
 
 **Settings → Language**: System, Italiano, English, Español. *System* follows your macOS language, or English if it's none of these. The change is immediate.
 
-## Watch the spot
-
-<!-- video: the 40-second spot is attached here after the first release -->
+<!-- ## Watch the spot (video): si attiva dopo la prima release, quando lo spot è allegato -->
 
 ## How it works
 
