@@ -685,7 +685,7 @@ struct ModernPopover: View {
                             .frame(width: 20, height: 20)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(c.t.stop)
+                    .accessibilityLabel(c.t.dismiss)
                 }
                 if c.needsManualRestore {
                     Button { c.retryRestoreSleep() } label: {
@@ -720,7 +720,7 @@ struct ModernPopover: View {
                         .frame(width: 20, height: 20)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(c.t.stop)
+                .accessibilityLabel(c.t.dismiss)
             }
             .font(Face.medium(12.5))
             .frame(maxWidth: .infinity, alignment: .leading)

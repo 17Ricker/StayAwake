@@ -207,7 +207,6 @@ final class Controller: ObservableObject {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {
             self.error = t.loginItemError
-            self.needsManualRestore = false
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }

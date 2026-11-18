@@ -74,7 +74,7 @@ struct MessageBanner: View {
                         .frame(width: 20, height: 20)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(c.t.stop)
+                .accessibilityLabel(c.t.dismiss)
             }
             if restoreAction {
                 Button { c.retryRestoreSleep() } label: {

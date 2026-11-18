@@ -37,6 +37,7 @@ func stringsTests() {
         check(!s.restoreSleepNow.isEmpty, "etichetta pulsante ripristino presente")
         check(!s.sleepStillDisabled.isEmpty && !s.cannotRestoreSleep.isEmpty, "messaggi di ripristino presenti")
         check(!s.loginItemError.isEmpty, "messaggio errore login item presente")
+        check(!s.dismiss.isEmpty && s.dismiss != s.stop, "etichetta «chiudi» distinta da Stop")
     }
 
     // «fino alle» con l'articolo giusto davanti all'una

@@ -71,6 +71,7 @@ extension Strings {
         stoppedHeat: "Fermato: il Mac è troppo caldo.",
         cannotRestoreSleep: "Non riesco a riportare lo sleep alla normalità. Ripristinalo con la password admin.",
         restoreSleepNow: "Ripristina",
+        dismiss: "Chiudi",
         loginItemError: "Impossibile modificare l'avvio al login. Controlla Impostazioni di Sistema → Generali → Elementi login.",
         permissionRemoved: "Permesso rimosso. Verrà richiesto di nuovo al prossimo avvio.",
         removeCancelled: "Rimozione annullata. Il permesso è ancora attivo.",

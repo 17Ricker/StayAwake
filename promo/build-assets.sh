@@ -15,7 +15,8 @@ for lang in en it es; do
   media="docs/media/$lang"
   rm -rf "$ui" && mkdir -p "$ui" "$media"
   build/preview "$ui" --lang "$lang" --promo > /dev/null
-  for f in night-idle-90 night-timed-1 night-continuous retro-idle modern-idle settings menubar-timed; do
+  # Nei README solo le immagini che usano (night-continuous serve solo alla promo)
+  for f in night-idle-90 night-timed-1 retro-idle modern-idle settings menubar-timed; do
     cp "$ui/$f.png" "$media/$f.png"
     # Solo riduzioni: le immagini piccole (la barra dei menu) restano come sono
     width=$(sips -g pixelWidth "$media/$f.png" | awk '/pixelWidth/{print $2}')

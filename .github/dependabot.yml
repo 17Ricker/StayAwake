@@ -1,0 +1,9 @@
+# Aggiornamenti delle GitHub Actions (bloccate per SHA): Dependabot apre una PR al mese.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci

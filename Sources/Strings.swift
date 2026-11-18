@@ -107,6 +107,8 @@ struct Strings: Sendable {
     let stoppedHeat: String
     let cannotRestoreSleep: String
     let restoreSleepNow: String
+    /// Etichetta VoiceOver del pulsante che chiude un messaggio.
+    let dismiss: String
     let loginItemError: String
     let permissionRemoved: String
     let removeCancelled: String
