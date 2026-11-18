@@ -1,5 +1,5 @@
 #!/bin/bash
-# Compila StayAwake da questo codice e lo installa in ~/Applications. Uso: ./installa.sh
+# Compila StayAwake da questo codice e lo installa in ~/Applications. Uso: ./install.sh
 set -euo pipefail
 # Le macro di SwiftUI (@State) richiedono Xcode completo, non solo i Command Line Tools.
 if [ -d /Applications/Xcode.app ]; then export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer; fi

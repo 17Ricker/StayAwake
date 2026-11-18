@@ -66,6 +66,7 @@ extension Strings {
         removePrompt: "StayAwake va a quitar el permiso que obtuvo para gestionar el reposo.",
         activationCancelled: "No se activó: hace falta la contraseña de administrador. Inténtalo de nuevo.",
         batteryTooLow: { "Batería por debajo del \($0)\u{00A0}%. Conecta el cargador o desactiva la protección." },
+        tooHotToStart: "El Mac está demasiado caliente: deja que se enfríe antes de activar StayAwake.",
         stoppedLowBattery: { "Detenido: batería por debajo del \($0)\u{00A0}%." },
         stoppedHeat: "Detenido: el Mac está demasiado caliente.",
         cannotRestoreSleep: "No se pudo volver a activar el reposo. En Terminal: sudo pmset -a disablesleep 0",

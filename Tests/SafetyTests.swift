@@ -22,6 +22,19 @@ func safetyTests() {
     check(!Thermal.shouldStop(.fair), "temperatura discreta: continua")
     check(!Thermal.shouldStop(.nominal), "temperatura normale: continua")
 
+    // Prima di attivare: batteria e temperatura (ognuna solo se la sua protezione è attiva)
+    do {
+        let t = Strings.for(.it)
+        check(StartCheck.blocker(stopOnLowBattery: true, batteryLow: true, stopOnHeat: true, thermal: .nominal, t: t) == t.batteryTooLow(Battery.threshold),
+              "attivazione: batteria bassa blocca")
+        check(StartCheck.blocker(stopOnLowBattery: true, batteryLow: false, stopOnHeat: true, thermal: .critical, t: t) == t.tooHotToStart,
+              "attivazione: Mac troppo caldo blocca")
+        check(StartCheck.blocker(stopOnLowBattery: true, batteryLow: false, stopOnHeat: false, thermal: .critical, t: t) == nil,
+              "attivazione: protezione temperatura spenta non blocca")
+        check(StartCheck.blocker(stopOnLowBattery: false, batteryLow: true, stopOnHeat: true, thermal: .serious, t: t) == nil,
+              "attivazione: batteria bassa con protezione spenta e temperatura seria non blocca")
+    }
+
     // Sentinella: quando l'app muore esegue il comando finale
     check(Sentinel.script(appPID: 123, finalCommand: "X").hasPrefix("while /bin/kill -0 123 "), "sentinella: attende il PID dell'app")
     do {

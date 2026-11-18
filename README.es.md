@@ -35,7 +35,7 @@ macOS 14 Sonoma o posterior, en Mac con Apple silicon o Intel.
    gh attestation verify StayAwake.zip -R ricky7x/StayAwake
    ```
 
-   - El primer comando comprueba que el archivo no esté dañado ni modificado.
+   - El primer comando comprueba que la descarga no esté dañada. El hash viene de la misma versión, así que por sí solo no demuestra de dónde viene el archivo.
    - El segundo ([GitHub CLI](https://cli.github.com)) demuestra que el zip lo creó GitHub Actions **a partir del código público de este repositorio**.
 3. Descomprímelo y mueve **StayAwake** a la carpeta **Aplicaciones**.
 4. Ábrela. StayAwake es gratuita y no está notarizada por Apple, así que la primera vez macOS dice que no puede verificar al desarrollador.
@@ -53,14 +53,14 @@ Necesitas Xcode (la app completa: las macros de SwiftUI no se compilan solo con 
 git clone https://github.com/ricky7x/StayAwake.git
 cd StayAwake
 ./test.sh        # pruebas, sin contraseña de administrador
-./installa.sh    # compila e instala en ~/Aplicaciones («installa» es «instala» en italiano)
+./install.sh     # compila e instala en ~/Aplicaciones
 ```
 
 `./release.sh` genera el mismo zip universal con firma ad-hoc que usan las versiones publicadas.
 
 ## Para qué sirve la contraseña
 
-Solo un administrador puede cambiar `disablesleep`. La primera vez que inicias StayAwake, macOS muestra su propia ventana de contraseña: StayAwake no la ve ni la guarda. Con ella, StayAwake instala una regla que permite **solo a tu usuario** ejecutar **solo estos dos comandos** sin contraseña:
+Solo un administrador puede cambiar `disablesleep`. La primera vez que activas StayAwake, macOS muestra su propia ventana de contraseña: StayAwake no la ve ni la guarda. Con ella, StayAwake instala una regla que permite **solo a tu usuario** ejecutar **solo estos dos comandos** sin contraseña:
 
 ```
 #501 ALL=(root) NOPASSWD: /usr/bin/pmset -a disablesleep 0, /usr/bin/pmset -a disablesleep 1
@@ -90,13 +90,14 @@ Conviene saberlo: otras apps que se ejecutan con tu usuario también pueden usar
 
 3. Sal de StayAwake y arrástrala a la Papelera.
 
-Las versiones anteriores a la 1.0 usaban un solo archivo, `/etc/sudoers.d/stayawake`. La 1.0 lo quita sola si contiene tu regla antigua; si no, puedes borrarlo con `sudo rm /etc/sudoers.d/stayawake`.
+Las primeras versiones usaban un solo archivo, `/etc/sudoers.d/stayawake`. StayAwake lo quita sola la primera vez que la activas, si contiene tu regla antigua; si no, puedes borrarlo con `sudo rm /etc/sudoers.d/stayawake`.
 
 ## Seguridad y límites
 
 - **No metas el Mac en una mochila con StayAwake activo.** Con la tapa cerrada puede calentarse. La protección térmica detiene StayAwake a temperatura crítica, pero no confíes solo en ella.
 - Con batería, el Mac sigue consumiendo con la tapa cerrada. La protección de batería detiene StayAwake por debajo del 20 %.
-- Si el Mac **se reinicia** con StayAwake activo, el reposo sigue desactivado hasta que StayAwake vuelva a abrirse. Activa **Abrir al iniciar sesión** para que ocurra solo.
+- Si el Mac **se reinicia** con StayAwake activo, el reposo sigue desactivado hasta que StayAwake vuelva a abrirse, también en la pantalla de inicio de sesión. Activa **Abrir al iniciar sesión** para que el reposo vuelva en cuanto entres.
+- El reposo es un ajuste de todo el Mac. Si varias personas usan StayAwake en el mismo Mac (cambio rápido de usuario), abrirla o cerrarla en una cuenta reactiva el reposo para todos, aunque otra cuenta la siga mostrando activa.
 - Si StayAwake se cierra inesperadamente o se fuerza su salida, un pequeño proceso en segundo plano devuelve el reposo a la normalidad en un par de segundos.
 - StayAwake no hace ninguna conexión de red.
 

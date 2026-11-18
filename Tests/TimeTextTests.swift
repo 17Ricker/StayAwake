@@ -27,5 +27,7 @@ func timeTextTests() {
     check(make(0, 5, "en", true) == TimeText(digits: "12:05", period: symbols("en").am), "12 h: mezzanotte e 5 → 12:05 AM")
     check(make(12, 58, "en", true) == TimeText(digits: "12:58", period: symbols("en").pm), "12 h: mezzogiorno → 12:58 PM")
     check(make(9, 5, "it", false).digits == "09:05", "24 h: due cifre per l'ora")
+    check(TimeText.uses12h(.oneToTwelve) && TimeText.uses12h(.zeroToEleven), "12 h: cicli 1–12 e 0–11")
+    check(!TimeText.uses12h(.zeroToTwentyThree) && !TimeText.uses12h(.oneToTwentyFour), "24 h: cicli 0–23 e 1–24")
     check(make(17, 37, "en", true).text == "5:37\u{00A0}" + symbols("en").pm, "testo intero con spazio indivisibile prima di PM")
 }

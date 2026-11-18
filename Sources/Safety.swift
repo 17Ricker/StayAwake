@@ -38,6 +38,18 @@ enum Thermal {
     static func shouldStop(_ state: ProcessInfo.ThermalState) -> Bool { state == .critical }
 }
 
+// MARK: - Controllo prima di attivare
+
+enum StartCheck {
+    /// Motivo per non attivare (testo da mostrare), oppure nil. Ogni controllo vale solo se la sua protezione è attiva.
+    static func blocker(stopOnLowBattery: Bool, batteryLow: Bool, stopOnHeat: Bool,
+                        thermal: ProcessInfo.ThermalState, t: Strings) -> String? {
+        if stopOnLowBattery && batteryLow { return t.batteryTooLow(Battery.threshold) }
+        if stopOnHeat && Thermal.shouldStop(thermal) { return t.tooHotToStart }
+        return nil
+    }
+}
+
 // MARK: - Sentinella
 
 /// Un piccolo processo staccato che aspetta la fine dell'app e poi riporta lo sleep alla normalità.

@@ -66,6 +66,7 @@ extension Strings {
         removePrompt: "StayAwake rimuove il permesso che aveva ottenuto per gestire lo sleep.",
         activationCancelled: "Attivazione annullata: serve la password admin. Riprova.",
         batteryTooLow: { "Batteria sotto il \($0)%. Collega l'alimentatore o disattiva la protezione." },
+        tooHotToStart: "Il Mac è troppo caldo: lascialo raffreddare prima di attivare StayAwake.",
         stoppedLowBattery: { "Fermato: batteria sotto il \($0)%." },
         stoppedHeat: "Fermato: il Mac è troppo caldo.",
         cannotRestoreSleep: "Non riesco a riportare lo sleep alla normalità. Nel Terminale: sudo pmset -a disablesleep 0",

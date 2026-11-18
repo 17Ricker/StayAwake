@@ -66,6 +66,7 @@ extension Strings {
         removePrompt: "StayAwake is removing the permission it was given to manage sleep.",
         activationCancelled: "Not started: an admin password is needed. Try again.",
         batteryTooLow: { "Battery below \($0)%. Plug in the charger or turn off battery protection." },
+        tooHotToStart: "Your Mac is too hot: let it cool down before turning StayAwake on.",
         stoppedLowBattery: { "Stopped: battery below \($0)%." },
         stoppedHeat: "Stopped: the Mac is too hot.",
         cannotRestoreSleep: "Couldn't turn sleep back on. In Terminal: sudo pmset -a disablesleep 0",

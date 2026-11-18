@@ -102,6 +102,7 @@ struct Strings: Sendable {
     let removePrompt: String
     let activationCancelled: String
     let batteryTooLow: @Sendable (Int) -> String
+    let tooHotToStart: String
     let stoppedLowBattery: @Sendable (Int) -> String
     let stoppedHeat: String
     let cannotRestoreSleep: String

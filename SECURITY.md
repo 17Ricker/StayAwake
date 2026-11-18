@@ -6,19 +6,19 @@ StayAwake changes a system setting, so it needs administrator rights once. This 
 
 Only two things, and only when you confirm them with your admin password in macOS's own dialog:
 
-1. **Install the permission** (the first time you start StayAwake). A short script, run as root:
+1. **Install the permission** (the first time you turn StayAwake on). A short script, run as root:
    - creates a temporary file with `mktemp` in `/tmp`;
    - writes the rule into it;
    - checks it with `visudo -cf`;
    - installs it with `install -m 440 -o root -g wheel` into `/etc/sudoers.d/stayawake-uid<your user ID>`;
-   - if a pre-1.0 file `/etc/sudoers.d/stayawake` contains exactly your old rule, removes it.
-2. **Remove the permission** (Settings → Remove permission): deletes your file and, if it's yours, the pre-1.0 one.
+   - if the single file used by early builds, `/etc/sudoers.d/stayawake`, contains exactly your old rule, removes it.
+2. **Remove the permission** (Settings → Remove permission): deletes your file and, if it's yours, the early-build one.
 
 Rules for everything that runs as root:
 
 - It touches nothing outside its own temporary file in `/tmp` and `/etc/sudoers.d/`.
 - It uses only absolute paths (`/usr/bin/…`, `/bin/…`), so it doesn't depend on `PATH`.
-- No user-controlled text goes into the script. The rule uses your numeric user ID, and your user name appears only in a comment, only if it contains letters, digits, `.`, `_` or `-`.
+- No user-controlled text goes into the script. The rule uses your numeric user ID, and your user name appears only in a comment and in the check of the early-build file, and only if it contains letters, digits, `.`, `_` or `-`.
 
 The code is in [`Sources/Permission.swift`](Sources/Permission.swift). The tests in [`Tests/PermissionTests.swift`](Tests/PermissionTests.swift) run these scripts without root, in a temporary folder.
 

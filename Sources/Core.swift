@@ -223,8 +223,9 @@ final class Controller: ObservableObject {
     private func activate(_ target: Mode, _ prepare: @escaping @MainActor () -> Void) {
         guard pending == nil else { return }
         error = nil; notice = nil
-        if stopOnLowBattery && Battery.isLow() {
-            error = t.batteryTooLow(Battery.threshold)
+        if let reason = StartCheck.blocker(stopOnLowBattery: stopOnLowBattery, batteryLow: stopOnLowBattery && Battery.isLow(),
+                                           stopOnHeat: stopOnHeat, thermal: ProcessInfo.processInfo.thermalState, t: t) {
+            error = reason
             return
         }
         pending = target
@@ -236,14 +237,17 @@ final class Controller: ObservableObject {
                 if !Permission.isGranted() {
                     guard Permission.install(prompt: prompt) else { return false }
                 }
-                return Permission.setSleepDisabled(true)
+                // La sentinella parte PRIMA di disattivare lo sleep: un crash in quel momento
+                // non lascia il Mac sveglio. Se l'attivazione fallisce, si ferma.
+                Sentinel.stopAll()
+                Sentinel.start(appPID: getpid())
+                if Permission.setSleepDisabled(true) { return true }
+                Sentinel.stopAll()
+                return false
             }.value
             pending = nil
             hasPermission = Permission.isGranted()
             if ok {
-                // Se l'app crasha o viene chiusa a forza, la sentinella riporta lo sleep alla normalità.
-                Sentinel.stopAll()
-                Sentinel.start(appPID: getpid())
                 prepare()
                 mode = target
                 holdAssertions()

@@ -25,9 +25,10 @@ struct TimeText: Equatable {
     }
 
     /// L'utente usa le 12 h? (Impostazioni di Sistema → Generali → Data e ora).
-    static func systemUses12h() -> Bool {
-        [.oneToTwelve, .zeroToEleven].contains(Locale.autoupdatingCurrent.hourCycle)
-    }
+    static func systemUses12h() -> Bool { uses12h(Locale.autoupdatingCurrent.hourCycle) }
+
+    /// 12 h per i cicli 1–12 e 0–11; 24 h per 0–23 e 1–24.
+    static func uses12h(_ cycle: Locale.HourCycle) -> Bool { [.oneToTwelve, .zeroToEleven].contains(cycle) }
 
     /// Orario di fine come lo vede l'utente: lingua dell'app, 12/24 h di sistema.
     static func end(_ date: Date, locale: Locale) -> TimeText {

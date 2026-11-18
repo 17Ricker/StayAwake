@@ -85,6 +85,27 @@ func permissionTests() {
         check(read(dir + "/stayawake-uid501") == "# StayAwake\n" + rule + "\n", "nome con apice: regola installata")
     }
 
+    // Nome con il punto (comune su macOS): entra nel commento, la migrazione funziona,
+    // e il nome del file resta senza punti
+    do {
+        let dotted = Permission.installScript(uid: 501, userName: "mario.rossi")
+        let dir = tempDir("punto")
+        try? (Permission.legacyRule(userName: "mario.rossi") + "\n").write(toFile: dir + "/stayawake", atomically: true, encoding: .utf8)
+        check(runWithoutRoot(dotted, in: dir) == 0, "nome con punto: exit 0")
+        check(read(dir + "/stayawake-uid501") == "# StayAwake: mario.rossi\n" + rule + "\n", "nome con punto: regola installata")
+        check(!FileManager.default.fileExists(atPath: dir + "/stayawake"), "nome con punto: vecchio file migrato")
+    }
+
+    // Rimozione con il vecchio file di un altro utente: resta intatto
+    do {
+        let dir = tempDir("rimuovi-altrui")
+        let other = Permission.legacyRule(userName: "altro") + "\n"
+        try? (rule + "\n").write(toFile: dir + "/stayawake-uid501", atomically: true, encoding: .utf8)
+        try? other.write(toFile: dir + "/stayawake", atomically: true, encoding: .utf8)
+        check(runWithoutRoot(Permission.removeScript(uid: 501, userName: "mario"), in: dir) == 0, "rimozione (vecchio file altrui): exit 0")
+        check(read(dir + "/stayawake") == other, "rimozione: il vecchio file di un altro utente resta intatto")
+    }
+
     // Rimozione
     do {
         let remove = Permission.removeScript(uid: 501, userName: "mario")

@@ -42,4 +42,5 @@ func stringsTests() {
     check(it.untilTime("17:37") == "fino alle 17:37", "it: fino alle")
     check(es.untilTime("5:37") == "hasta las 5:37" && es.untilTime("1:05") == "hasta la 1:05", "es: hasta las / hasta la 1")
     check(en.untilTime("5:37") == "until 5:37", "en: until")
+    check(it.untilTime("1:05") == "fino all'1:05" && it.untilTime("01:05") == "fino all'01:05", "it: fino all'una")
 }
