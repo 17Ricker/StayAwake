@@ -19,18 +19,46 @@
       .h2 { font-size: 54px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; color: var(--dim); }
       .accent { color: var(--orange); }
 
-      /* Scena 1: portatile */
-      .laptop { position: absolute; top: 120px; left: 0; right: 0; margin: 0 auto; width: 840px; height: 560px; }
-      .lid { position: absolute; left: 60px; right: 60px; top: 0; height: 470px; border-radius: 26px 26px 6px 6px;
-              background: #2a2b31; border: 3px solid #3a3b42; transform-origin: 50% 100%; }
-      .screen { position: absolute; inset: 18px 18px 22px 18px; border-radius: 12px; overflow: hidden;
-                 background: linear-gradient(160deg, #1d2a3a, #101722); }
-      .term { position: absolute; inset: 36px; display: flex; flex-direction: column; gap: 18px; }
-      .term i { display: block; height: 16px; border-radius: 8px; background: #5f7b99; }
-      .deck { position: absolute; left: 0; right: 0; top: 470px; height: 34px; border-radius: 4px 4px 22px 22px;
-               background: linear-gradient(#45464d, #2b2c31); }
-      #s1-hook1 { top: 700px; }
-      #s1-hook2 { top: 812px; color: var(--red); }
+      /* Scena 1: portatile realistico (2D con prospettiva, senza loghi) */
+      .mac { position: absolute; top: 60px; left: 0; right: 0; margin: 0 auto; width: 1040px; height: 620px; }
+      .mac-glow { position: absolute; left: 120px; right: 120px; top: 420px; height: 260px; border-radius: 50%;
+                  background: radial-gradient(closest-side, rgba(110,160,230,0.38), rgba(110,160,230,0)); }
+      .mac-shadow { position: absolute; left: 40px; right: 40px; top: 590px; height: 40px; border-radius: 50%;
+                    background: radial-gradient(closest-side, rgba(0,0,0,0.75), rgba(0,0,0,0)); }
+      .mac-screen { position: absolute; left: 110px; width: 820px; top: 0; height: 486px; transform-origin: 50% 100%;
+                    border-radius: 22px 22px 4px 4px; background: linear-gradient(180deg, #3b3d44, #24252a);
+                    box-shadow: inset 0 0 0 2px #50525a, 0 30px 60px rgba(0,0,0,0.45); }
+      .bezel { position: absolute; inset: 10px 10px 14px 10px; border-radius: 14px 14px 2px 2px; background: #050506; overflow: hidden; }
+      .notch { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; width: 120px; height: 16px; border-radius: 0 0 9px 9px; background: #050506; z-index: 2; }
+      .display { position: absolute; inset: 6px 8px 8px 8px; border-radius: 8px; overflow: hidden;
+                 background: radial-gradient(900px 500px at 30% 0%, #23324a, #0b1220 70%); }
+      .win { position: absolute; left: 44px; top: 54px; width: 680px; height: 330px; border-radius: 12px; background: rgba(12,14,18,0.92);
+             box-shadow: 0 18px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.08); }
+      .win .bar { height: 30px; display: flex; align-items: center; gap: 8px; padding-left: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+      .win .bar i { width: 11px; height: 11px; border-radius: 50%; background: #5b5e66; display: block; }
+      .win .body { padding: 16px 20px; font-family: "JetBrains Mono", monospace; font-size: 17px; line-height: 1.75; color: #cfd6e2; }
+      .win .ok { color: #6ee7a0; } .win .run { color: #ee7b3f; } .win .muted { color: #7d8597; }
+      .pbar { display: inline-block; width: 300px; height: 10px; border-radius: 5px; background: #2a3140; vertical-align: middle; margin-left: 10px; overflow: hidden; }
+      .pbar b { display: block; width: 100%; height: 100%; background: #ee7b3f; transform-origin: 0% 50%; }
+      .sheen { position: absolute; inset: 0; background: linear-gradient(120deg, rgba(255,255,255,0.07), rgba(255,255,255,0) 45%); }
+      .mac-hinge { position: absolute; left: 100px; width: 840px; top: 482px; height: 12px; border-radius: 6px;
+                   background: linear-gradient(180deg, #17181b, #3a3b40); }
+      .mac-deck { position: absolute; left: 0; width: 1040px; top: 490px; height: 104px;
+                  clip-path: polygon(9% 0, 91% 0, 100% 86%, 99% 100%, 1% 100%, 0 86%);
+                  background: linear-gradient(180deg, #aeb1b8, #8d9097 55%, #6f7279); }
+      .keys { position: absolute; left: 15%; right: 15%; top: 10px; height: 52px; clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%);
+              background:
+                repeating-linear-gradient(90deg, #1b1c1f 0 30px, #4a4c52 30px 33px),
+                #1b1c1f;
+              -webkit-mask: repeating-linear-gradient(180deg, #000 0 10px, transparent 10px 13px); mask: repeating-linear-gradient(180deg, #000 0 10px, transparent 10px 13px); }
+      .trackpad { position: absolute; left: 0; right: 0; margin: 0 auto; width: 240px; top: 66px; height: 26px; border-radius: 6px;
+                  background: linear-gradient(180deg, #9a9da4, #868990); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); }
+      .deck-lip { position: absolute; left: 1%; right: 1%; bottom: 0; height: 12px; background: linear-gradient(180deg, #5d6067, #3f4146); }
+      .mac-lidback { position: absolute; left: 0; width: 1040px; top: 490px; height: 104px; transform-origin: 50% 0%;
+                     clip-path: polygon(9% 0, 91% 0, 100% 86%, 99% 100%, 1% 100%, 0 86%);
+                     background: linear-gradient(180deg, #c9ccd2, #a9acb3 60%, #8e9198); }
+      #s1-hook1 { top: 712px; }
+      #s1-hook2 { top: 820px; color: var(--red); }
       #s1-fade { position: absolute; inset: 0; background: #000; opacity: 0; }
 
       /* Scena 2: icona */
@@ -89,9 +117,28 @@
     <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="40">
 
       <section id="s1" class="clip" data-start="0" data-duration="4" data-track-index="1">
-        <div class="laptop"><div class="lid" id="s1-lid"><div class="screen" id="s1-screen"><div class="term">
-          <i style="width:62%"></i><i style="width:84%"></i><i style="width:48%"></i><i style="width:76%"></i><i style="width:58%"></i><i style="width:90%"></i><i style="width:40%"></i>
-        </div></div></div><div class="deck"></div></div>
+        <div class="mac" id="s1-mac">
+          <div class="mac-glow" id="s1-glow"></div>
+          <div class="mac-shadow"></div>
+          <div class="mac-deck"><div class="keys"></div><div class="trackpad"></div><div class="deck-lip"></div></div>
+          <div class="mac-hinge"></div>
+          <div class="mac-screen" id="s1-lid">
+            <div class="bezel"><div class="notch"></div>
+              <div class="display" id="s1-screen" data-layout-ignore>
+                <div class="win"><div class="bar"><i></i><i></i><i></i></div>
+                  <div class="body">
+                    <div><span class="run">agent</span> ▸ refactoring 128 files…</div>
+                    <div><span class="ok">✓</span> 214 tests passed</div>
+                    <div><span class="run">▸</span> building release <span class="pbar"><b id="s1-progress"></b></span></div>
+                    <div class="muted">downloading dataset (3.2 GB)…</div>
+                  </div>
+                </div>
+                <div class="sheen"></div>
+              </div>
+            </div>
+          </div>
+          <div class="mac-lidback" id="s1-lidback"></div>
+        </div>
         <p id="s1-hook1" class="center h1" data-var-text="hook1">You close the lid.</p>
         <p id="s1-hook2" class="center h2" data-var-text="hook2">Your AI agent stops. Your download dies.</p>
         <div id="s1-fade"></div>
@@ -188,9 +235,11 @@
       const out = "power3.out", inn = "power2.in";
 
       // 1 · Problema (0–4 s)
-      tl.fromTo("#s1 .term i", { scaleX: 0.35, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.2, stagger: 0.06, ease: out }, 0);
-      tl.fromTo("#s1-lid", { rotationX: 0, transformPerspective: 1400 }, { rotationX: -86, duration: 0.7, ease: inn }, 0.35);
-      tl.to("#s1-screen", { opacity: 0, duration: 0.45 }, 0.5);
+      tl.fromTo("#s1-progress", { scaleX: 0.55 }, { scaleX: 0.72, duration: 0.45, ease: "none" }, 0);
+      tl.fromTo("#s1-lid", { scaleY: 1, filter: "brightness(1)" }, { scaleY: 0.02, filter: "brightness(0.55)", duration: 0.42, ease: "power2.in" }, 0.4);
+      tl.to("#s1-glow", { opacity: 0, duration: 0.4 }, 0.5);
+      tl.fromTo("#s1-lidback", { scaleY: 0 }, { scaleY: 1, duration: 0.26, ease: "power2.out" }, 0.82);
+      tl.set("#s1-lid", { opacity: 0 }, 0.84);
       tl.fromTo("#s1-hook2", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: out }, 0.9);
       tl.to("#s1-hook2", { opacity: 0.25, duration: 0.06, yoyo: true, repeat: 3 }, 3.45);
       tl.to("#s1-fade", { opacity: 1, duration: 0.3 }, 3.7);
