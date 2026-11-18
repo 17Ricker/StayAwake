@@ -1,25 +1,110 @@
 <p align="center"><img src="Resources/AppIcon.png" width="128" alt="Icono de StayAwake"></p>
 
-# StayAwake
+<h1 align="center">StayAwake</h1>
 
-[English](README.md) · [Italiano](README.it.md) · **Español**
+<p align="center"><b>Cierra la tapa. Sigue trabajando.</b><br>
+Una pequeña app para la barra de menús de macOS que mantiene el Mac encendido, incluso con la tapa cerrada, durante el tiempo que elijas.</p>
 
-Una pequeña app para la barra de menús de macOS que mantiene el Mac encendido, **incluso con la tapa cerrada**, durante el tiempo que elijas.
+<p align="center">
+  <a href="https://github.com/ricky7x/StayAwake/releases/latest"><img src="https://img.shields.io/github/v/release/ricky7x/StayAwake?style=flat-square" alt="Última versión"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/ricky7x/StayAwake?style=flat-square" alt="Licencia MIT"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-1c1d22?style=flat-square" alt="macOS 14 o posterior">
+  <a href="https://github.com/ricky7x/StayAwake/actions/workflows/ci.yml"><img src="https://github.com/ricky7x/StayAwake/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
 
-<p align="center"><img src="docs/screenshots/night.png" width="720" alt="StayAwake en el estilo Noche: apagado, temporizador en marcha, continuo"></p>
+<p align="center"><a href="README.md">English</a> · <a href="README.it.md">Italiano</a> · <b>Español</b></p>
 
-## Qué hace
+<p align="center"><img src="docs/media/promo-es.gif" width="800" alt="StayAwake en acción: el icono suena, luego la esfera gira y empieza el temporizador"></p>
 
-- **Temporizador** de 5 minutos a 24 horas, o **continuo** hasta que lo detengas. Puedes añadir tiempo mientras corre.
-- Funciona **con la tapa cerrada** (usa `pmset disablesleep` de macOS).
-- **La seguridad, primero:**
-  - se detiene cuando la batería baja del 20 % (opcional);
-  - se detiene si macOS indica una temperatura crítica (opcional);
-  - al salir devuelve el reposo a la normalidad, y también si la app se cierra inesperadamente o se fuerza su salida.
-- Tres estilos (Noche, Retro, Moderno) y tres idiomas (Español, English, Italiano).
-- **Sin conexiones de red**, sin telemetría, sin actualizaciones automáticas.
+## Por qué
 
-<p align="center"><img src="docs/screenshots/modern.png" width="560" alt="StayAwake en el estilo Moderno"></p>
+Empiezas un trabajo largo (un agente de IA rehaciendo tu código, una descarga grande, una compilación), cierras la tapa para ir a por un café… y macOS pone el Mac en reposo. Todo se detiene.
+
+StayAwake mantiene el Mac encendido con la tapa cerrada, exactamente el tiempo que elijas, y luego lo deja todo como estaba. Es gratuita, de código abierto y no hace ninguna conexión de red.
+
+## Funciones
+
+### Elige un tiempo, o déjalo encendido
+
+<img src="docs/media/es/night-idle-90.png" width="300" align="right" alt="La esfera en 1 h 30">
+
+- Gira la esfera (rueda, arrastre o clic) de **5 minutos a 24 horas**, o elige un tiempo rápido: 15 min, 30 min, 1 h, 2 h.
+- La tarjeta muestra **hasta qué hora** sigue encendido, en el formato de 12 o 24 horas de tu Mac.
+- **Continuo** mantiene el Mac encendido hasta que lo detengas.
+- Funciona **con la tapa cerrada**: usa `pmset disablesleep` de macOS.
+
+<br clear="right">
+
+### Temporizador en marcha
+
+<img src="docs/media/es/night-timed-1.png" width="300" align="right" alt="El temporizador en marcha con el tiempo que queda">
+
+- Una gran cuenta atrás y una barra que se llena con el paso del tiempo.
+- **Añadir 30 min** sin detenerlo.
+- Cuando se acaba el tiempo, el Mac vuelve a la normalidad, incluso con la tapa todavía cerrada.
+- La barra de menús muestra el tiempo que queda. En los estilos Noche y Retro el icono se convierte en una píldora con un anillo que se llena:
+
+<img src="docs/media/es/menubar-timed.png" height="36" alt="El icono de la barra de menús durante el temporizador">
+
+<br clear="right">
+
+### La seguridad, primero
+
+<img src="docs/media/es/settings.png" width="300" align="right" alt="Ajustes: protección de batería y térmica, idioma, estilo">
+
+- **Protección de batería:** con batería, se detiene por debajo del 20&nbsp;%.
+- **Protección térmica:** se detiene si macOS indica una temperatura crítica.
+- **A prueba de cierres inesperados:** si la app se cierra de golpe o se fuerza su salida, un pequeño proceso en segundo plano devuelve el reposo a la normalidad en un par de segundos.
+- Al salir, siempre devuelve el reposo a la normalidad.
+- **Pantalla siempre encendida**, **Abrir al iniciar sesión** y **Quitar permiso** con un clic.
+
+<br clear="right">
+
+### Tres estilos, tres idiomas
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/es/night-idle-90.png" width="240" alt="Estilo Noche"><br><b>Noche</b></td>
+    <td align="center"><img src="docs/media/es/retro-idle.png" width="240" alt="Estilo Retro"><br><b>Retro</b></td>
+    <td align="center"><img src="docs/media/es/modern-idle.png" width="240" alt="Estilo Moderno"><br><b>Moderno</b></td>
+  </tr>
+</table>
+
+**Ajustes → Idioma**: Sistema, Italiano, English, Español. *Sistema* sigue el idioma de macOS, o el inglés si no es ninguno de estos. El cambio es inmediato.
+
+## Mira el anuncio
+
+<!-- video: el anuncio de 40 segundos se adjunta aquí tras la primera versión -->
+
+## Cómo funciona
+
+La primera vez que activas StayAwake, macOS pide una vez la contraseña de administrador. A partir de ahí, StayAwake puede activar y desactivar el reposo por sí sola, y solo eso:
+
+```mermaid
+sequenceDiagram
+    participant Yo as Tú
+    participant App as StayAwake
+    participant Mac as macOS
+    participant Root as sudo y pmset
+    Yo->>App: La activas por primera vez
+    App->>Mac: Pide la contraseña de administrador
+    Mac->>Root: Ejecuta el script de instalación como root
+    Root->>Root: visudo comprueba la regla
+    Root-->>App: Regla guardada en /etc/sudoers.d/stayawake-uid501
+    App->>Root: sudo -n pmset -a disablesleep 1
+    Root-->>App: El Mac sigue encendido, sin más contraseñas
+```
+
+Mientras está activa, un pequeño proceso centinela vigila la app. Si la app desaparece, el reposo vuelve:
+
+```mermaid
+flowchart LR
+    A[StayAwake se activa] --> B[Arranca el centinela]
+    B --> C{¿Sigue abierta la app?}
+    C -- sí, vuelve a mirar en 2 s --> C
+    C -- no, se cerró de golpe o a la fuerza --> D[sudo -n pmset -a disablesleep 0]
+    D --> E[El Mac puede volver a entrar en reposo]
+```
 
 ## Requisitos
 
@@ -56,7 +141,7 @@ cd StayAwake
 ./install.sh     # compila e instala en ~/Aplicaciones
 ```
 
-`./release.sh` genera el mismo zip universal con firma ad-hoc que usan las versiones publicadas.
+`./release.sh` genera el mismo zip universal con firma ad-hoc que usan las versiones publicadas. El anuncio y las imágenes de esta página salen de la app real: mira `promo/`.
 
 ## Para qué sirve la contraseña
 
@@ -95,17 +180,22 @@ Las primeras versiones usaban un solo archivo, `/etc/sudoers.d/stayawake`. StayA
 ## Seguridad y límites
 
 - **No metas el Mac en una mochila con StayAwake activo.** Con la tapa cerrada puede calentarse. La protección térmica detiene StayAwake a temperatura crítica, pero no confíes solo en ella.
-- Con batería, el Mac sigue consumiendo con la tapa cerrada. La protección de batería detiene StayAwake por debajo del 20 %.
+- Con batería, el Mac sigue consumiendo con la tapa cerrada. La protección de batería detiene StayAwake por debajo del 20&nbsp;%.
 - Si el Mac **se reinicia** con StayAwake activo, el reposo sigue desactivado hasta que StayAwake vuelva a abrirse, también en la pantalla de inicio de sesión. Activa **Abrir al iniciar sesión** para que el reposo vuelva en cuanto entres.
 - El reposo es un ajuste de todo el Mac. Si varias personas usan StayAwake en el mismo Mac (cambio rápido de usuario), abrirla o cerrarla en una cuenta reactiva el reposo para todos, aunque otra cuenta la siga mostrando activa.
-- Si StayAwake se cierra inesperadamente o se fuerza su salida, un pequeño proceso en segundo plano devuelve el reposo a la normalidad en un par de segundos.
 - StayAwake no hace ninguna conexión de red.
 
-## Idiomas
+## Preguntas frecuentes
 
-**Ajustes → Idioma**: Sistema, Italiano, English, Español. *Sistema* sigue el idioma de macOS, o el inglés si no es ninguno de estos.
+**¿Funciona con la tapa cerrada y con batería?** Sí. La protección de batería la detiene por debajo del 20&nbsp;%, y puedes desactivarla en Ajustes.
 
-<p align="center"><img src="docs/screenshots/settings.png" width="560" alt="Ajustes en los estilos Noche y Retro"></p>
+**¿Necesita conexión a internet?** No. StayAwake nunca se conecta a la red.
+
+**¿Qué pasa si se cierra de golpe?** Un pequeño proceso en segundo plano lo nota en un par de segundos y vuelve a activar el reposo.
+
+**¿Funciona en Mac con Intel?** Sí. La versión es universal (Apple silicon e Intel) y necesita macOS 14 o posterior.
+
+**¿Puedo ver exactamente qué se ejecuta como administrador?** Sí: lee [SECURITY.md](SECURITY.md) y [`Sources/Permission.swift`](Sources/Permission.swift).
 
 ## Seguridad
 

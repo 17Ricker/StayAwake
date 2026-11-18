@@ -1,25 +1,110 @@
 <p align="center"><img src="Resources/AppIcon.png" width="128" alt="StayAwake icon"></p>
 
-# StayAwake
+<h1 align="center">StayAwake</h1>
 
-**English** · [Italiano](README.it.md) · [Español](README.es.md)
+<p align="center"><b>Close the lid. Keep working.</b><br>
+A small macOS menu bar app that keeps your Mac awake, even with the lid closed, for as long as you choose.</p>
 
-A small macOS menu bar app that keeps your Mac awake, **even with the lid closed**, for as long as you choose.
+<p align="center">
+  <a href="https://github.com/ricky7x/StayAwake/releases/latest"><img src="https://img.shields.io/github/v/release/ricky7x/StayAwake?style=flat-square" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/ricky7x/StayAwake?style=flat-square" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-1c1d22?style=flat-square" alt="macOS 14 or later">
+  <a href="https://github.com/ricky7x/StayAwake/actions/workflows/ci.yml"><img src="https://github.com/ricky7x/StayAwake/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
 
-<p align="center"><img src="docs/screenshots/night.png" width="720" alt="StayAwake in the Night style: off, timer running, continuous"></p>
+<p align="center"><b>English</b> · <a href="README.it.md">Italiano</a> · <a href="README.es.md">Español</a></p>
 
-## What it does
+<p align="center"><img src="docs/media/promo-en.gif" width="800" alt="StayAwake in action: the icon rings, then the dial turns and the timer starts"></p>
 
-- **Timer** from 5 minutes to 24 hours, or **continuous** until you stop it. You can add time while it runs.
-- Works **with the lid closed** (it uses macOS's `pmset disablesleep`).
-- **Safety first:**
-  - stops when the battery drops below 20% (optional);
-  - stops if macOS reports a critical temperature (optional);
-  - restores normal sleep when you quit, and even if the app crashes or is force-quit.
-- Three styles (Night, Retro, Modern) and three languages (English, Italiano, Español).
-- **No network access**, no telemetry, no automatic updates.
+## Why
 
-<p align="center"><img src="docs/screenshots/modern.png" width="560" alt="StayAwake in the Modern style"></p>
+You start a long job (an AI agent refactoring your code, a big download, a build), you close the lid to grab a coffee… and macOS puts the Mac to sleep. Everything stops.
+
+StayAwake keeps the Mac awake with the lid closed, for exactly as long as you choose, and then puts things back the way they were. It's free, open source and makes no network connections.
+
+## Features
+
+### Pick a time, or keep it on
+
+<img src="docs/media/en/night-idle-90.png" width="300" align="right" alt="The dial set to 1 h 30">
+
+- Turn the dial (scroll, drag or click) from **5 minutes to 24 hours**, or tap a preset: 15 min, 30 min, 1 h, 2 h.
+- The card shows **when it will end**, in your Mac's 12 or 24-hour format.
+- **Continuous** keeps the Mac awake until you stop it.
+- Works **with the lid closed**: it uses macOS's own `pmset disablesleep`.
+
+<br clear="right">
+
+### Timer running
+
+<img src="docs/media/en/night-timed-1.png" width="300" align="right" alt="The timer running with the remaining time">
+
+- A big countdown and a bar that fills as time passes.
+- **Add 30 min** without stopping.
+- When the time is up, the Mac goes back to normal, even with the lid still closed.
+- The menu bar shows the time left. In the Night and Retro styles the icon becomes a pill with a ring that fills up:
+
+<img src="docs/media/en/menubar-timed.png" height="36" alt="The menu bar icon while the timer runs">
+
+<br clear="right">
+
+### Safety first
+
+<img src="docs/media/en/settings.png" width="300" align="right" alt="Settings: battery and heat protection, language, style">
+
+- **Battery protection:** on battery, it stops below 20%.
+- **Heat protection:** it stops if macOS reports a critical temperature.
+- **Crash-proof:** if the app crashes or is force-quit, a tiny background process restores normal sleep within a couple of seconds.
+- It always restores normal sleep when you quit.
+- **Keep display on**, **Open at login**, and **Remove permission** in one click.
+
+<br clear="right">
+
+### Three styles, three languages
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/media/en/night-idle-90.png" width="240" alt="Night style"><br><b>Night</b></td>
+    <td align="center"><img src="docs/media/en/retro-idle.png" width="240" alt="Retro style"><br><b>Retro</b></td>
+    <td align="center"><img src="docs/media/en/modern-idle.png" width="240" alt="Modern style"><br><b>Modern</b></td>
+  </tr>
+</table>
+
+**Settings → Language**: System, Italiano, English, Español. *System* follows your macOS language, or English if it's none of these. The change is immediate.
+
+## Watch the spot
+
+<!-- video: the 40-second spot is attached here after the first release -->
+
+## How it works
+
+The first time you turn StayAwake on, macOS asks for an administrator password once. From then on, StayAwake can switch sleep on and off by itself, and only that:
+
+```mermaid
+sequenceDiagram
+    participant You
+    participant App as StayAwake
+    participant Mac as macOS
+    participant Root as sudo and pmset
+    You->>App: Turn it on for the first time
+    App->>Mac: Ask for the admin password
+    Mac->>Root: Run the install script as root
+    Root->>Root: visudo checks the rule
+    Root-->>App: Rule saved in /etc/sudoers.d/stayawake-uid501
+    App->>Root: sudo -n pmset -a disablesleep 1
+    Root-->>App: Mac stays awake, no more passwords
+```
+
+While it's on, a small sentinel process watches the app. If the app disappears, sleep comes back:
+
+```mermaid
+flowchart LR
+    A[StayAwake turns on] --> B[Sentinel starts]
+    B --> C{Is the app still running?}
+    C -- yes, check again in 2 s --> C
+    C -- no, it crashed or was force quit --> D[sudo -n pmset -a disablesleep 0]
+    D --> E[The Mac can sleep again]
+```
 
 ## Requirements
 
@@ -56,7 +141,7 @@ cd StayAwake
 ./install.sh     # builds and installs to ~/Applications
 ```
 
-`./release.sh` builds the same universal, ad-hoc signed zip that the releases use.
+`./release.sh` builds the same universal, ad-hoc signed zip that the releases use. The spot and the images on this page are made from the real app: see `promo/`.
 
 ## What the password is for
 
@@ -98,14 +183,19 @@ Early builds used a single file, `/etc/sudoers.d/stayawake`. StayAwake removes i
 - On battery, the Mac keeps using power with the lid closed. Battery protection stops StayAwake below 20%.
 - If the Mac **restarts** while StayAwake is on, sleep stays disabled until StayAwake opens again, including at the login window. Turn on **Open at login** so sleep is restored as soon as you log in.
 - Sleep is a setting for the whole Mac. If several people use StayAwake on the same Mac (fast user switching), opening or quitting it in one account turns sleep back on for everyone, even if another account still shows it as on.
-- If StayAwake crashes or is force-quit, a tiny background process restores normal sleep within a couple of seconds.
 - StayAwake makes no network connections.
 
-## Languages
+## FAQ
 
-**Settings → Language**: System, Italiano, English, Español. *System* follows your macOS language, or English if it's none of these.
+**Does it work with the lid closed on battery?** Yes. Battery protection stops it below 20%, and you can turn that off in Settings.
 
-<p align="center"><img src="docs/screenshots/settings.png" width="560" alt="Settings in the Night and Retro styles"></p>
+**Does it need an internet connection?** No. StayAwake never connects to the network.
+
+**What happens if it crashes?** A small background process notices within a couple of seconds and turns sleep back on.
+
+**Does it work on Intel Macs?** Yes. The release is universal (Apple silicon and Intel) and needs macOS 14 or later.
+
+**Can I see exactly what runs as administrator?** Yes: read [SECURITY.md](SECURITY.md) and [`Sources/Permission.swift`](Sources/Permission.swift).
 
 ## Security
 
