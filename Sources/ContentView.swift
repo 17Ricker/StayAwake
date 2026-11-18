@@ -17,9 +17,9 @@ struct Header: View {
 
     private var status: String {
         switch c.mode {
-        case .off: return "Spento"
-        case .timed: return "Attivo · timer"
-        case .indefinite: return "Attivo · continuo"
+        case .off: return c.t.statusOff
+        case .timed: return c.t.statusTimer
+        case .indefinite: return c.t.statusContinuous
         }
     }
 
@@ -42,8 +42,8 @@ struct Header: View {
                 Image(systemName: "gearshape")
             }
             .buttonStyle(IconButtonStyle(active: showSettings))
-            .accessibilityLabel("Impostazioni")
-            .accessibilityValue(showSettings ? "aperte" : "chiuse")
+            .accessibilityLabel(c.t.settings)
+            .accessibilityValue(showSettings ? c.t.settingsOpen : c.t.settingsClosed)
         }
     }
 }
@@ -83,6 +83,7 @@ private struct SettingToggleRow: View {
     let title: String
     var subtitle: String?
     @Binding var isOn: Bool
+    let t: Strings
 
     var body: some View {
         Button { isOn.toggle() } label: {
@@ -99,7 +100,7 @@ private struct SettingToggleRow: View {
             }
         }
         .buttonStyle(RowButtonStyle())
-        .accessibilityValue(isOn ? "attivo" : "spento")
+        .accessibilityValue(isOn ? t.toggleOn : t.toggleOff)
         .accessibilityAddTraits(.isToggle)
     }
 }
@@ -141,21 +142,27 @@ private struct SettingChoiceRow<T: Hashable & Identifiable>: View {
     }
 }
 
-/// Scelta dello stile (Notte, Retro, Modern): titolo sopra e selettore a tutta larghezza.
-private struct NightStyleRow: View {
-    @Binding var selection: AppTheme
+/// Scelta a tutta larghezza (Stile, Lingua): titolo sopra e selettore sotto.
+private struct NightWideChoiceRow<T: Hashable & Identifiable>: View {
+    let icon: String
+    let title: String
+    let options: [T]
+    let name: (T) -> String
+    @Binding var selection: T
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
-                Image(systemName: "paintpalette").font(.system(size: 15)).foregroundStyle(Night.dim).frame(width: 22)
-                Text("Stile").font(Face.medium(14))
+                Image(systemName: icon).font(.system(size: 15)).foregroundStyle(Night.dim).frame(width: 22)
+                Text(title).font(Face.medium(14))
             }
             HStack(spacing: 2) {
-                ForEach(AppTheme.allCases) { option in
+                ForEach(options) { option in
                     let chosen = option == selection
                     Button { selection = option } label: {
-                        Text(option.title)
+                        Text(name(option))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                             .font(Face.medium(12.5))
                             .foregroundStyle(chosen ? Night.onAccent : Night.dim)
                             .frame(maxWidth: .infinity)
@@ -181,24 +188,30 @@ struct SettingsPanel: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            SettingToggleRow(icon: "battery.25percent", title: "Protezione batteria",
-                             subtitle: "Ferma sotto il \(Battery.threshold)%", isOn: $c.stopOnLowBattery)
-            SettingToggleRow(icon: "display", title: "Schermo sempre acceso",
-                             subtitle: "Niente spegnimento per inattività", isOn: $c.keepDisplayOn)
-            SettingToggleRow(icon: "arrow.up.forward.app", title: "Avvia al login",
-                             isOn: Binding(get: { c.launchAtLogin }, set: { c.setLaunchAtLogin($0) }))
+            let t = c.t
+            SettingToggleRow(icon: "battery.25percent", title: t.batteryProtection,
+                             subtitle: t.batteryProtectionDetail(Battery.threshold), isOn: $c.stopOnLowBattery, t: t)
+            SettingToggleRow(icon: "thermometer.high", title: t.heatProtection,
+                             subtitle: t.heatProtectionDetail, isOn: $c.stopOnHeat, t: t)
+            SettingToggleRow(icon: "display", title: t.keepDisplayOn,
+                             subtitle: t.keepDisplayOnDetail, isOn: $c.keepDisplayOn, t: t)
+            SettingToggleRow(icon: "arrow.up.forward.app", title: t.launchAtLogin,
+                             isOn: Binding(get: { c.launchAtLogin }, set: { c.setLaunchAtLogin($0) }), t: t)
             Groove().padding(.horizontal, 10).padding(.vertical, 4)
             if c.theme == .night {
-                SettingChoiceRow(icon: "dial.medium", title: "Quadrante",
-                                 options: DialStyle.allCases, name: { $0.title }, selection: $c.dialStyle)
+                SettingChoiceRow(icon: "dial.medium", title: t.dial,
+                                 options: DialStyle.allCases, name: { t.dialName($0) }, selection: $c.dialStyle)
             }
-            NightStyleRow(selection: $c.theme)
+            NightWideChoiceRow(icon: "paintpalette", title: t.style, options: AppTheme.allCases,
+                               name: { t.themeName($0) }, selection: $c.theme)
+            NightWideChoiceRow(icon: "globe", title: t.language, options: AppLanguage.allCases,
+                               name: { t.languageName($0) }, selection: $c.language)
             Groove().padding(.horizontal, 10).padding(.vertical, 4)
             if c.hasPermission {
                 Button { c.removePermission() } label: {
                     HStack(spacing: 10) {
                         Image(systemName: "lock.slash").font(.system(size: 15)).foregroundStyle(Night.dim).frame(width: 22)
-                        Text("Rimuovi permesso").frame(maxWidth: .infinity, alignment: .leading)
+                        Text(t.removePermission).frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 .buttonStyle(RowButtonStyle())
@@ -206,7 +219,7 @@ struct SettingsPanel: View {
             Button { NSApplication.shared.terminate(nil) } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "xmark").font(.system(size: 15)).foregroundStyle(Night.dim).frame(width: 22)
-                    Text("Esci").frame(maxWidth: .infinity, alignment: .leading)
+                    Text(t.quit).frame(maxWidth: .infinity, alignment: .leading)
                     Text("⌘Q")
                         .font(Face.medium(11))
                         .foregroundStyle(Night.dim)
@@ -243,7 +256,7 @@ struct ContentView: View {
         .focusEffectDisabled()
         // ⌘Q funziona anche a impostazioni chiuse.
         .background(
-            Button("Esci") { NSApplication.shared.terminate(nil) }
+            Button(c.t.quit) { NSApplication.shared.terminate(nil) }
                 .keyboardShortcut("q")
                 .frame(width: 0, height: 0)
                 .opacity(0)

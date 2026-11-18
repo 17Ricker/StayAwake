@@ -1,5 +1,5 @@
 // Snapshot della vista reale (con la vera ScrollView della rotella) tramite NSHostingView.
-// Uso: swiftc -D PREVIEW -D LIVEWHEEL Sources/*.swift Preview/Live/main.swift -o live && ./live <cartella>
+// Uso: swiftc -D PREVIEW -D LIVEWHEEL Sources/*.swift Preview/Live/main.swift -o build/live && build/live <cartella>
 import SwiftUI
 import AppKit
 

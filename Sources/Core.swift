@@ -1,86 +1,7 @@
 import SwiftUI
 import AppKit
 import ServiceManagement
-import IOKit.ps
 import IOKit.pwr_mgt
-
-// MARK: - pmset
-
-enum Pmset {
-    static let sudoersPath = "/etc/sudoers.d/stayawake"
-
-    static var hasPermission: Bool { FileManager.default.fileExists(atPath: sudoersPath) }
-
-    /// Esegue `sudo -n pmset -a disablesleep N`: funziona solo se la regola sudoers è installata.
-    static func set(_ on: Bool) -> Bool {
-        run("/usr/bin/sudo", ["-n", "/usr/bin/pmset", "-a", "disablesleep", on ? "1" : "0"])
-    }
-
-    /// Installa (una volta sola, con richiesta di password admin) una regola sudoers
-    /// limitata ai due soli comandi `pmset -a disablesleep 0|1`.
-    static func installPermission() -> Bool {
-        guard let shell = installScript(user: NSUserName()) else { return false }
-        return admin(shell, prompt: "StayAwake deve poter attivare/disattivare lo sleep del Mac senza chiedere ogni volta la password.")
-    }
-
-    /// Comando che gira come root. Il file temporaneo nasce in /tmp (sticky bit): un processo
-    /// dell'utente non può sostituirlo tra il controllo di visudo e `install`. Con un semplice
-    /// `mktemp` finiva nel $TMPDIR dell'utente, dove poteva scambiarlo con una regola sua.
-    /// Percorsi assoluti, così non dipende dal PATH ereditato.
-    /// Restituisce nil se il nome utente non è sicuro da mettere nella regola.
-    static func installScript(user: String) -> String? {
-        // Niente apici, spazi né caratteri speciali di sudoers (%gruppo, #uid, ALL).
-        guard user.range(of: #"^[A-Za-z0-9._-]+$"#, options: .regularExpression) != nil,
-              user.uppercased() != "ALL" else { return nil }
-        let rule = "\(user) ALL=(root) NOPASSWD: /usr/bin/pmset -a disablesleep 0, /usr/bin/pmset -a disablesleep 1"
-        return "tmp=$(/usr/bin/mktemp /tmp/stayawake.XXXXXX) && printf '%s\\n' '\(rule)' > \"$tmp\""
-            + " && /usr/sbin/visudo -cf \"$tmp\" >/dev/null"
-            + " && /usr/bin/install -m 440 -o root -g wheel \"$tmp\" \(sudoersPath); rc=$?; /bin/rm -f \"$tmp\"; exit $rc"
-    }
-
-    static func removePermission() -> Bool {
-        admin("/bin/rm -f \(sudoersPath)", prompt: "StayAwake rimuove il permesso che aveva ottenuto per gestire lo sleep.")
-    }
-
-    private static func admin(_ shell: String, prompt: String) -> Bool {
-        let escaped = shell.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
-        let script = "do shell script \"\(escaped)\" with administrator privileges with prompt \"\(prompt)\""
-        return run("/usr/bin/osascript", ["-e", script])
-    }
-
-    @discardableResult
-    private static func run(_ path: String, _ args: [String]) -> Bool {
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: path)
-        p.arguments = args
-        p.standardOutput = FileHandle.nullDevice
-        p.standardError = FileHandle.nullDevice
-        do { try p.run() } catch { return false }
-        p.waitUntilExit()
-        return p.terminationStatus == 0
-    }
-}
-
-// MARK: - Batteria
-
-enum Battery {
-    static let threshold = 20
-
-    /// Vero solo se il Mac è alimentato a batteria e la carica è sotto soglia.
-    static func isLow() -> Bool {
-        guard let info = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
-              let list = IOPSCopyPowerSourcesList(info)?.takeRetainedValue() as? [CFTypeRef] else { return false }
-        if let type = IOPSGetProvidingPowerSourceType(info)?.takeRetainedValue() as String?, type == "AC Power" {
-            return false
-        }
-        for source in list {
-            guard let d = IOPSGetPowerSourceDescription(info, source)?.takeUnretainedValue() as? [String: Any],
-                  let capacity = d["Current Capacity"] as? Int else { continue }
-            if capacity < threshold { return true }
-        }
-        return false
-    }
-}
 
 // MARK: - Preferenze di aspetto
 
@@ -88,19 +9,11 @@ enum Battery {
 enum AppTheme: String, CaseIterable, Identifiable {
     case night, retro, modern
     var id: String { rawValue }
-    var title: String {
-        switch self {
-        case .night: return "Notte"
-        case .retro: return "Retro"
-        case .modern: return "Modern"
-        }
-    }
 }
 
 enum DialStyle: String, CaseIterable, Identifiable {
     case classic, circle
     var id: String { rawValue }
-    var title: String { self == .classic ? "Arco" : "Cerchio" }
 }
 
 // MARK: - Model
@@ -121,9 +34,13 @@ final class Controller: ObservableObject {
     }
 
     @Published var duration: Int { didSet { Self.defaults.set(duration, forKey: "duration"); error = nil } }
+    /// Lingua dell'interfaccia (`system` segue macOS). Il cambio è immediato.
+    @Published var language: AppLanguage { didSet { Self.defaults.set(language.rawValue, forKey: "language") } }
     @Published var theme: AppTheme { didSet { Self.defaults.set(theme.rawValue, forKey: "theme") } }
     @Published var dialStyle: DialStyle { didSet { Self.defaults.set(dialStyle.rawValue, forKey: "dialStyle") } }
     @Published var stopOnLowBattery: Bool { didSet { Self.defaults.set(stopOnLowBattery, forKey: "stopOnLowBattery") } }
+    /// Si ferma se il Mac diventa troppo caldo (stato termico «critico»), per esempio chiuso in uno zaino.
+    @Published var stopOnHeat: Bool { didSet { Self.defaults.set(stopOnHeat, forKey: "stopOnHeat") } }
     /// Tiene acceso anche lo schermo: `disablesleep` ferma lo sleep del Mac, non lo spegnimento per inattività.
     @Published var keepDisplayOn: Bool {
         didSet {
@@ -138,12 +55,17 @@ final class Controller: ObservableObject {
     @Published var endDate: Date?
     @Published var error: String?
     @Published var notice: String?
-    @Published var hasPermission = Pmset.hasPermission
+    @Published var hasPermission = false
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     private var ticker: Timer?
     private var tickCount = 0
     private var assertions: [IOPMAssertionID] = []
+
+    /// Testi nella lingua scelta.
+    var t: Strings { Strings.for(language) }
+    /// Locale della lingua scelta (simboli AM/PM).
+    var locale: Locale { language.locale }
 
     var isActive: Bool { mode != .off }
     var busy: Bool { pending != nil }
@@ -166,9 +88,9 @@ final class Controller: ObservableObject {
 
     var summary: String {
         switch mode {
-        case .off: return "StayAwake spento"
-        case .timed: return "StayAwake attivo, restano \(menuTitle)"
-        case .indefinite: return "StayAwake attivo senza limite di tempo"
+        case .off: return t.summaryOff
+        case .timed: return t.summaryTimed(menuTitle)
+        case .indefinite: return t.summaryContinuous
         }
     }
 
@@ -188,15 +110,29 @@ final class Controller: ObservableObject {
             let m = d.object(forKey: "minutes") as? Int ?? 0
             duration = Self.clamp(h * 60 + m)
         }
+        language = AppLanguage(rawValue: d.string(forKey: "language") ?? "") ?? .system
         theme = AppTheme(rawValue: d.string(forKey: "theme") ?? "") ?? .night
         dialStyle = DialStyle(rawValue: d.string(forKey: "dialStyle") ?? "") ?? .classic
         stopOnLowBattery = d.object(forKey: "stopOnLowBattery") as? Bool ?? true
         keepDisplayOn = d.object(forKey: "keepDisplayOn") as? Bool ?? true
+        stopOnHeat = d.object(forKey: "stopOnHeat") as? Bool ?? true
         #if !PREVIEW
-        // Se un'esecuzione precedente è stata interrotta, riporta lo sleep alla normalità.
-        _ = Pmset.set(false)
-        NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { _ in
-            _ = Pmset.set(false)
+        // Se un'esecuzione precedente è stata interrotta, riporta lo sleep alla normalità
+        // (le sue sentinelle non servono più). All'avvio non si chiede la password: se lo sleep
+        // è rimasto disattivato e il permesso non c'è più, lo si dice con il comando esatto.
+        if Permission.setSleepDisabled(false) || !Permission.isSleepDisabled() {
+            Sentinel.stopAll()
+        } else {
+            error = t.sleepStillDisabled
+        }
+        hasPermission = Permission.isGranted()
+        NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                if self?.restoreSleep() ?? Permission.setSleepDisabled(false) { Sentinel.stopAll() }
+            }
+        }
+        NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.checkHeat() }
         }
         #endif
     }
@@ -248,14 +184,15 @@ final class Controller: ObservableObject {
         endDate = nil
         mode = .off
         notice = message
-        if !Pmset.set(false) { error = "Non riesco a ripristinare lo sleep. Esci da StayAwake e riaprila." }
+        // Prima si ripristina, poi si fermano le sentinelle: se il ripristino fallisce restano lì.
+        if restoreSleep() { Sentinel.stopAll() } else { error = t.cannotRestoreSleep }
     }
 
     func setLaunchAtLogin(_ on: Bool) {
         do {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {
-            self.error = "Avvio al login non modificabile: \(error.localizedDescription)"
+            self.error = t.loginItemError(error.localizedDescription)
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
@@ -264,38 +201,55 @@ final class Controller: ObservableObject {
         if isActive { stop() }
         error = nil; notice = nil
         Task {
-            let ok = await Task.detached { Pmset.removePermission() }.value
-            hasPermission = Pmset.hasPermission
-            if ok { notice = "Permesso rimosso. Verrà richiesto di nuovo al prossimo avvio." }
-            else { error = "Rimozione annullata. Il permesso è ancora attivo." }
+            let prompt = t.removePrompt
+            let ok = await Task.detached { Permission.remove(prompt: prompt) }.value
+            hasPermission = Permission.isGranted()
+            if ok { notice = t.permissionRemoved }
+            else { error = t.removeCancelled }
         }
     }
 
     // MARK: Interni
 
+    /// Riporta lo sleep alla normalità. Se la regola è stata tolta a mano (README, Terminale) chiede
+    /// la password, ma solo se lo sleep è davvero ancora disattivato. Vero se alla fine è normale.
+    @discardableResult
+    private func restoreSleep() -> Bool {
+        if Permission.setSleepDisabled(false) { return true }
+        guard Permission.isSleepDisabled() else { return true }
+        return Permission.restoreWithPassword(prompt: t.restorePrompt)
+    }
+
     private func activate(_ target: Mode, _ prepare: @escaping @MainActor () -> Void) {
         guard pending == nil else { return }
         error = nil; notice = nil
         if stopOnLowBattery && Battery.isLow() {
-            error = "Batteria sotto il \(Battery.threshold)%. Collega l'alimentatore o disattiva la protezione."
+            error = t.batteryTooLow(Battery.threshold)
             return
         }
         pending = target
         Task {
+            let prompt = t.installPrompt
             let ok = await Task.detached { () -> Bool in
-                if Pmset.set(true) { return true }
-                guard Pmset.installPermission() else { return false }
-                return Pmset.set(true)
+                // Prima la regola, poi il cambio: con credenziali admin in cache `sudo -n` riuscirebbe
+                // anche senza regola, e lo stop successivo fallirebbe a cache scaduta.
+                if !Permission.isGranted() {
+                    guard Permission.install(prompt: prompt) else { return false }
+                }
+                return Permission.setSleepDisabled(true)
             }.value
             pending = nil
-            hasPermission = Pmset.hasPermission
+            hasPermission = Permission.isGranted()
             if ok {
+                // Se l'app crasha o viene chiusa a forza, la sentinella riporta lo sleep alla normalità.
+                Sentinel.stopAll()
+                Sentinel.start(appPID: getpid())
                 prepare()
                 mode = target
                 holdAssertions()
                 startTicker()
             } else {
-                error = "Attivazione annullata: serve la password admin. Riprova."
+                error = t.activationCancelled
             }
         }
     }
@@ -337,8 +291,15 @@ final class Controller: ObservableObject {
         }
         tickCount += 1
         if tickCount % 15 == 0, stopOnLowBattery, Battery.isLow() {
-            stop(notice: "Fermato: batteria sotto il \(Battery.threshold)%.")
+            stop(notice: t.stoppedLowBattery(Battery.threshold))
         }
+        if tickCount % 15 == 0 { checkHeat() }
+    }
+
+    /// Ferma tutto se il Mac è troppo caldo (e la protezione è attiva).
+    private func checkHeat() {
+        guard isActive, stopOnHeat, Thermal.shouldStop(ProcessInfo.processInfo.thermalState) else { return }
+        stop(notice: t.stoppedHeat)
     }
 }
 
@@ -352,15 +313,15 @@ enum MenuBarArt {
 
     @MainActor static func image(for c: Controller) -> NSImage {
         switch c.mode {
-        case .off: return idle()
+        case .off: return idle(c.t.summaryOff)
         case .timed: return pill(timed: true, progress: c.progress, title: c.menuTitle, summary: c.summary)
         case .indefinite: return pill(timed: false, progress: 1, title: "", summary: c.summary)
         }
     }
 
-    static func idle() -> NSImage {
+    static func idle(_ description: String) -> NSImage {
         let cfg = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
-        let base = NSImage(systemSymbolName: "bolt", accessibilityDescription: "StayAwake spento")!
+        let base = NSImage(systemSymbolName: "bolt", accessibilityDescription: description)!
         let img = base.withSymbolConfiguration(cfg) ?? base
         img.isTemplate = true            // si adatta a barra chiara/scura
         return img

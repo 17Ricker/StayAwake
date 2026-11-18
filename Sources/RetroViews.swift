@@ -187,9 +187,9 @@ struct RetroBody: View {
         VStack(spacing: 12) {
             RetroDevice(c: c)
             HStack {
-                Text("CONTINUO").font(Face.mono(11)).tracking(1.6).foregroundStyle(Retro.text)
+                Text(c.t.continuous.uppercased()).font(Face.mono(11)).tracking(1.6).foregroundStyle(Retro.text)
                 Spacer()
-                RetroSwitch(isOn: c.mode == .indefinite, busy: c.pending == .indefinite) { want in
+                RetroSwitch(isOn: c.mode == .indefinite, busy: c.pending == .indefinite, t: c.t) { want in
                     if want { c.startIndefinite() } else { c.stop() }
                 }
                 .disabled(c.busy && c.pending != .indefinite)
@@ -236,8 +236,8 @@ private struct RetroScreen: View {
             PixelBolt().padding(.top, 2)
             Spacer(minLength: 6)
             HStack(spacing: 6) {
-                Text("MODO").foregroundStyle(Retro.text)
-                Text(c.mode == .indefinite ? "CONTINUO" : "TIMER").foregroundStyle(Retro.orange)
+                Text(c.t.mode.uppercased()).foregroundStyle(Retro.text)
+                Text((c.mode == .indefinite ? c.t.continuous : c.t.timer).uppercased()).foregroundStyle(Retro.orange)
             }
             .font(Face.mono(11)).tracking(1.2)
             DotText(text: timeText, pitch: timeText.count > 5 ? 3.9 : 5.0, color: Retro.dot)
@@ -245,9 +245,10 @@ private struct RetroScreen: View {
             if c.mode == .timed {
                 DotBar(progress: c.progress).padding(.bottom, 8)
             }
-            HStack(spacing: 6) {
-                Text(c.mode == .indefinite ? "DURATA" : "FINO ALLE").foregroundStyle(Retro.text)
-                endValue.foregroundStyle(Retro.orange)
+            // Su una riga se entra, altrimenti l'orario va sotto: mai troncato.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) { endLabel; endValue.foregroundStyle(Retro.orange) }
+                VStack(spacing: 2) { endLabel; endValue.foregroundStyle(Retro.orange) }
             }
             .font(Face.mono(11)).tracking(1.2)
             Spacer(minLength: 8)
@@ -262,22 +263,26 @@ private struct RetroScreen: View {
         .accessibilityLabel(c.summary)
     }
 
+    private var endLabel: some View {
+        Text((c.mode == .indefinite ? c.t.duration : c.t.untilCaps).uppercased()).foregroundStyle(Retro.text)
+    }
+
     @ViewBuilder private var endValue: some View {
         switch c.mode {
-        case .off: EndClock(minutes: c.duration)
-        case .timed: Text(Clock.hm.string(from: c.endDate ?? Date()))
-        case .indefinite: Text("SENZA LIMITE")
+        case .off: EndClock(minutes: c.duration, locale: c.locale) { Text($0.text.uppercased()) }
+        case .timed: Text(TimeText.end(c.endDate ?? Date(), locale: c.locale).text.uppercased())
+        case .indefinite: Text(c.t.noLimit.uppercased())
         }
     }
 
     private var hint: some View {
         let line: Text
         if c.pending != nil {
-            line = Text("attendo la password…")
+            line = Text(c.t.retroWaiting)
         } else if c.isActive {
-            line = Text("premi \(Image(systemName: "stop.fill")) per fermare")
+            line = Text("\(c.t.hintPress) \(Image(systemName: "stop.fill")) \(c.t.hintToStop)")
         } else {
-            line = Text("premi \(Image(systemName: "checkmark")) per avviare")
+            line = Text("\(c.t.hintPress) \(Image(systemName: "checkmark")) \(c.t.hintToStart)")
         }
         return line
             .font(Face.mono(10.5))
@@ -306,9 +311,9 @@ private struct RetroKeys: View {
     private var upDown: some View {
         let shape = RoundedRectangle(cornerRadius: 27, style: .continuous)
         return VStack(spacing: 0) {
-            RepeatKey(label: "Più tempo", action: { c.nudge(5) }) { keyFace("chevron.up") }
+            RepeatKey(label: c.t.moreTime, action: { c.nudge(5) }) { keyFace("chevron.up") }
             Rectangle().fill(Color.black.opacity(0.22)).frame(height: 1)
-            RepeatKey(label: "Meno tempo", action: { c.nudge(-5) }) { keyFace("chevron.down") }
+            RepeatKey(label: c.t.lessTime, action: { c.nudge(-5) }) { keyFace("chevron.down") }
         }
         .frame(width: 54, height: 104)
         .background(vertical(Retro.key))
@@ -347,7 +352,7 @@ private struct RetroKeys: View {
         .buttonStyle(PressScaleStyle())
         .keyboardShortcut(.defaultAction)
         .allowsHitTesting(!c.busy)
-        .accessibilityLabel(c.isActive ? "Stop" : "Avvia timer")
+        .accessibilityLabel(c.isActive ? c.t.stop : c.t.startTimer)
     }
 }
 
@@ -355,6 +360,7 @@ private struct RetroKeys: View {
 private struct RetroSwitch: View {
     let isOn: Bool
     let busy: Bool
+    let t: Strings
     let action: (Bool) -> Void
 
     var body: some View {
@@ -379,8 +385,8 @@ private struct RetroSwitch: View {
         }
         .buttonStyle(PressScaleStyle())
         .animation(.smooth(duration: 0.2), value: isOn)
-        .accessibilityLabel("Continuo")
-        .accessibilityValue(isOn ? "attivo" : "spento")
+        .accessibilityLabel(t.continuous)
+        .accessibilityValue(isOn ? t.toggleOn : t.toggleOff)
         .accessibilityAddTraits(.isToggle)
     }
 

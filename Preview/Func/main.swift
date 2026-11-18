@@ -1,6 +1,6 @@
 // Prova funzionale: ospita la vera ContentView in una finestra, preme i pulsanti (accessibilità e click del mouse)
 // e controlla stato dell'app e `pmset`. Usa il vero permesso sudo: ripristina sempre lo sleep alla fine.
-// Uso: swiftc -D FUNCTEST Sources/*.swift Preview/Func/main.swift -o functest && ./functest
+// Uso: swiftc -D FUNCTEST Sources/*.swift Preview/Func/main.swift -o build/functest && build/functest
 import SwiftUI
 import AppKit
 

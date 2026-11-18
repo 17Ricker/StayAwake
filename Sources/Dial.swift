@@ -1,25 +1,6 @@
 import SwiftUI
 import AppKit
 
-// MARK: - Testi della durata
-
-enum DurationText {
-    /// `45 min`, `1 h`, `1 h 30`.
-    static func long(_ m: Int) -> String {
-        if m < 60 { return "\(m) min" }
-        let h = m / 60, r = m % 60
-        return r == 0 ? "\(h) h" : "\(h) h \(r)"
-    }
-
-    static func spoken(_ m: Int) -> String {
-        let h = m / 60, r = m % 60
-        var parts: [String] = []
-        if h > 0 { parts.append(h == 1 ? "1 ora" : "\(h) ore") }
-        if r > 0 { parts.append("\(r) minuti") }
-        return parts.joined(separator: " e ")
-    }
-}
-
 // MARK: - Geometria del quadrante
 
 /// Un grado dell'arco vale un minuto: 5° tra una tacca e l'altra, 30° tra due valori in chiaro.
@@ -38,6 +19,7 @@ enum DialMetrics {
 private struct DialCanvas: View, Animatable {
     var phase: Double
     let style: DialStyle
+    let t: Strings
 
     var animatableData: Double {
         get { phase }
@@ -95,7 +77,7 @@ private struct DialCanvas: View, Animatable {
             let labelAlpha = max(near, fade * 0.85 * clear)
             guard labelAlpha > 0.02 else { continue }
             let size = 12.5 + 5.5 * CGFloat(near)
-            let text = Text(DurationText.long(value))
+            let text = Text(t.durationLong(value))
                 .font(near > 0.5 ? Face.demi(size) : Face.medium(size))
                 .foregroundColor(Night.ink.opacity(labelAlpha))
             label(ctx, text, deg: deg, radius: rOut - length - 6)
@@ -112,7 +94,7 @@ private struct DialCanvas: View, Animatable {
         ctx.stroke(Path(ellipseIn: rect), with: .color(Night.ink), lineWidth: 1.5)
         let digits = "\(selected)"
         ctx.draw(Text(digits).font(Face.demi(digits.count > 3 ? 10 : 12.5)).foregroundColor(Night.ink), at: center)
-        let long = DurationText.long(selected)
+        let long = t.durationLong(selected)
         ctx.draw(Text(long).font(Face.demi(long.count > 6 ? 13 : 16)).foregroundColor(Night.ink),
                  at: CGPoint(x: center.x + 23, y: center.y), anchor: .leading)
     }
@@ -151,6 +133,7 @@ struct ScrollCatcher: NSViewRepresentable {
 struct ArcDial: View {
     @Binding var minutes: Int
     let style: DialStyle
+    let t: Strings
     @State private var dragStart: Int?
     @State private var scrollRemainder: CGFloat = 0
     @FocusState private var focused: Bool
@@ -165,7 +148,7 @@ struct ArcDial: View {
     }
 
     var body: some View {
-        DialCanvas(phase: Double(minutes), style: style)
+        DialCanvas(phase: Double(minutes), style: style, t: t)
             .animation(.smooth(duration: 0.14), value: minutes)
             .mask(edgeFade)
             .contentShape(Rectangle())
@@ -184,8 +167,8 @@ struct ArcDial: View {
             }
             // VoiceOver: un solo elemento regolabile.
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Durata del timer")
-            .accessibilityValue(DurationText.spoken(minutes))
+            .accessibilityLabel(t.durationA11y)
+            .accessibilityValue(t.durationSpoken(minutes))
             .accessibilityAdjustableAction { direction in
                 switch direction {
                 case .increment: step(5)

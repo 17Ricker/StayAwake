@@ -169,18 +169,19 @@ struct Digits: View {
 }
 
 enum Clock {
-    static let hm: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
-    }()
+    /// Solo per le anteprime: un «adesso» fisso.
+    nonisolated(unsafe) static var fixedNow: Date?
 }
 
-/// Ora di fine se il timer partisse adesso; si aggiorna ogni minuto.
-struct EndClock: View {
+/// Ora di fine se il timer partisse adesso; si aggiorna ogni minuto. Il contenuto decide come mostrarla.
+struct EndClock<Content: View>: View {
     let minutes: Int
+    let locale: Locale
+    @ViewBuilder let content: (TimeText) -> Content
 
     var body: some View {
         TimelineView(.everyMinute) { ctx in
-            Text(Clock.hm.string(from: ctx.date.addingTimeInterval(TimeInterval(minutes * 60))))
+            content(TimeText.end((Clock.fixedNow ?? ctx.date).addingTimeInterval(TimeInterval(minutes * 60)), locale: locale))
         }
     }
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Compila StayAwake e lo installa in ~/Applications. Uso: ./installa.sh
+# Compila StayAwake da questo codice e lo installa in ~/Applications. Uso: ./installa.sh
 set -euo pipefail
 # Le macro di SwiftUI (@State) richiedono Xcode completo, non solo i Command Line Tools.
 if [ -d /Applications/Xcode.app ]; then export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer; fi
@@ -9,25 +9,15 @@ APP="$HOME/Applications/StayAwake.app"
 BUILD="$(mktemp -d)"
 trap 'rm -rf "$BUILD"' EXIT
 
-mkdir -p "$BUILD/StayAwake.app/Contents/MacOS" "$HOME/Applications"
+mkdir -p "$BUILD/StayAwake.app/Contents/MacOS" "$BUILD/StayAwake.app/Contents/Resources" "$HOME/Applications"
 
-swiftc -O -parse-as-library -swift-version 5 Sources/*.swift -o "$BUILD/StayAwake.app/Contents/MacOS/StayAwake"
+swiftc -O -parse-as-library -swift-version 5 -target "$(uname -m)-apple-macos14" \
+  Sources/*.swift -o "$BUILD/StayAwake.app/Contents/MacOS/StayAwake"
+cp Info.plist "$BUILD/StayAwake.app/Contents/Info.plist"
+cp Resources/AppIcon.icns "$BUILD/StayAwake.app/Contents/Resources/AppIcon.icns"
 
-cat > "$BUILD/StayAwake.app/Contents/Info.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>CFBundleIdentifier</key><string>it.riccardo.stayawake</string>
-  <key>CFBundleName</key><string>StayAwake</string>
-  <key>CFBundleExecutable</key><string>StayAwake</string>
-  <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>1.0</string>
-  <key>LSMinimumSystemVersion</key><string>14.0</string>
-  <key>LSUIElement</key><true/>
-</dict></plist>
-PLIST
-
-codesign --force --sign - "$BUILD/StayAwake.app"
+# Firma ad-hoc con hardened runtime.
+codesign --force --options runtime --sign - "$BUILD/StayAwake.app"
 
 pkill -x StayAwake 2>/dev/null || true
 rm -rf "$APP"

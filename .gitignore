@@ -1,0 +1,13 @@
+# Build e binari di prova (anche quelli di Preview/, che escono in build/)
+build/
+
+# File di sistema
+.DS_Store
+
+# Solo locale: note private e workspace dei piani
+private/
+.superpowers/
+.claude/
+
+# Note di progetto (design, piani): solo locali
+docs/superpowers/

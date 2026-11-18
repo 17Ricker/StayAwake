@@ -12,16 +12,10 @@ enum NightLayout {
 // MARK: - Tempi rapidi
 
 struct Preset: Identifiable {
-    let label: String
     let minutes: Int
     var id: Int { minutes }
 
-    static let all = [
-        Preset(label: "15 min", minutes: 15),
-        Preset(label: "30 min", minutes: 30),
-        Preset(label: "1 h", minutes: 60),
-        Preset(label: "2 h", minutes: 120)
-    ]
+    static let all = [15, 30, 60, 120].map(Preset.init)
 }
 
 // MARK: - Corpo del tema “Notte”
@@ -55,7 +49,7 @@ struct NightIdle: View {
 
     private var dialCard: some View {
         HStack(spacing: 0) {
-            ArcDial(minutes: $c.duration, style: c.dialStyle)
+            ArcDial(minutes: $c.duration, style: c.dialStyle, t: c.t)
                 .frame(width: DialMetrics.size.width, height: DialMetrics.size.height)
             hero
         }
@@ -66,16 +60,24 @@ struct NightIdle: View {
 
     private var hero: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("FINO ALLE").font(Face.medium(11)).tracking(1.8).foregroundStyle(Night.dim)
-            EndClock(minutes: c.duration).font(Face.demi(46)).foregroundStyle(Night.ink)
-                .lineLimit(1).minimumScaleFactor(0.8)
+            Text(c.t.untilCaps).font(Face.medium(11)).tracking(1.8).foregroundStyle(Night.dim)
+            EndClock(minutes: c.duration, locale: c.locale) { time in
+                // Cifre grandi, AM/PM piccolo accanto: l'orario non si tronca mai.
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(time.digits).font(Face.demi(46)).lineLimit(1).minimumScaleFactor(0.5)
+                    if let period = time.period {
+                        Text(period).font(Face.demi(15)).fixedSize()
+                    }
+                }
+                .foregroundStyle(Night.ink)
+            }
             Rectangle().fill(Night.orange).frame(width: 28, height: 3)
-            Text("Il Mac resta acceso anche a coperchio chiuso.")
+            Text(c.t.lidNote)
                 .font(Face.regular(11.5)).foregroundStyle(Night.dim)
                 .fixedSize(horizontal: false, vertical: true)
             if !c.hasPermission {
                 // Dentro la scheda, non sotto il tasto: così l'altezza non cambia al primo avvio.
-                Text("La prima volta serve la password admin.")
+                Text(c.t.firstTimePassword)
                     .font(Face.regular(11.5)).foregroundStyle(Night.dim)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -89,7 +91,7 @@ struct NightIdle: View {
         HStack(spacing: 8) {
             ForEach(Preset.all) { p in
                 let selected = c.duration == p.minutes
-                Button(p.label) { c.setDuration(p.minutes) }
+                Button(c.t.durationLong(p.minutes)) { c.setDuration(p.minutes) }
                     .buttonStyle(ChipButtonStyle(selected: selected))
                     .accessibilityAddTraits(selected ? .isSelected : [])
             }
@@ -101,10 +103,10 @@ struct NightIdle: View {
             HStack(spacing: 8) {
                 if c.pending == .timed {
                     Spinner(onLight: true)
-                    Text("In attesa della password…")
+                    Text(c.t.waitingPassword)
                 } else {
                     Image(systemName: "timer").font(.system(size: 15, weight: .medium))
-                    Text("Avvia timer")
+                    Text(c.t.startTimer)
                 }
             }
         }
@@ -130,12 +132,12 @@ struct NightActive: View {
                 Button { c.extend(by: 1800) } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "plus").font(.system(size: 12, weight: .semibold))
-                        Text("Prolunga di 30 min")
+                        Text(c.t.add30)
                     }
                 }
                 .buttonStyle(GhostButtonStyle())
             } else {
-                Text("Resta acceso finché non lo fermi.")
+                Text(c.t.staysOnUntilStopped)
                     .font(Face.regular(13)).foregroundStyle(Night.dim)
                     .frame(maxWidth: .infinity, minHeight: 42)
             }
@@ -157,7 +159,7 @@ struct NightActive: View {
             HStack(alignment: .bottom, spacing: 8) {
                 readout
                 Spacer(minLength: 0)
-                StopRoundButton(tint: tint, soft: soft) { c.stop() }
+                StopRoundButton(tint: tint, soft: soft, label: c.t.stop) { c.stop() }
             }
         }
         .padding(18)
@@ -173,20 +175,20 @@ struct NightActive: View {
                 Text(endCaption).font(Face.regular(13)).foregroundStyle(Night.dim)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Restano \(text)")
+            .accessibilityLabel(c.t.remaining(text))
         } else {
             VStack(alignment: .leading, spacing: 2) {
                 Image(systemName: "infinity").font(.system(size: 46, weight: .light)).foregroundStyle(Night.red)
-                Text("Senza scadenza").font(Face.regular(13)).foregroundStyle(Night.dim)
+                Text(c.t.noEnd).font(Face.regular(13)).foregroundStyle(Night.dim)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Attivo senza limite di tempo")
+            .accessibilityLabel(c.t.activeNoLimit)
         }
     }
 
     private var endCaption: String {
         guard let end = c.endDate else { return "" }
-        return "fino alle \(Clock.hm.string(from: end))"
+        return c.t.untilTime(TimeText.end(end, locale: c.locale).text)
     }
 }
 
@@ -252,6 +254,7 @@ struct Ruler: View {
 struct StopRoundButton: View {
     let tint: Color
     let soft: Color
+    let label: String
     let action: () -> Void
 
     var body: some View {
@@ -265,7 +268,7 @@ struct StopRoundButton: View {
         }
         .buttonStyle(PressScaleStyle())
         .keyboardShortcut(.defaultAction)
-        .accessibilityLabel("Stop")
+        .accessibilityLabel(label)
     }
 }
 
@@ -288,7 +291,7 @@ struct ContinuoRow: View {
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(isOn ? Night.ink : Night.dim)
                     .frame(width: 22)
-                Text(waiting ? "In attesa della password…" : "Continuo")
+                Text(waiting ? c.t.waitingPassword : c.t.continuous)
                     .foregroundStyle(waiting ? Night.dim : Night.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if waiting { Spinner() } else { NightSwitch(isOn: isOn) }
@@ -297,8 +300,8 @@ struct ContinuoRow: View {
         .buttonStyle(RowButtonStyle(minHeight: 40))
         .allowsHitTesting(!c.busy)
         .disabled(c.busy && !waiting)
-        .accessibilityLabel("Continuo")
-        .accessibilityValue(isOn ? "attivo" : "spento")
+        .accessibilityLabel(c.t.continuous)
+        .accessibilityValue(isOn ? c.t.toggleOn : c.t.toggleOff)
         .accessibilityAddTraits(.isToggle)
     }
 }

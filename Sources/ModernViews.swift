@@ -199,6 +199,7 @@ private struct ModernToggleRow: View {
     let title: String
     var subtitle: String?
     @Binding var isOn: Bool
+    let t: Strings
 
     var body: some View {
         Button { isOn.toggle() } label: {
@@ -215,7 +216,7 @@ private struct ModernToggleRow: View {
             }
         }
         .buttonStyle(ModernRowButtonStyle())
-        .accessibilityValue(isOn ? "attivo" : "spento")
+        .accessibilityValue(isOn ? t.toggleOn : t.toggleOff)
         .accessibilityAddTraits(.isToggle)
     }
 }
@@ -263,7 +264,8 @@ struct ModernDrum: View {
     var body: some View {
         HStack(alignment: .center, spacing: 2) {
             wheel
-            Text(unit).font(Face.medium(13)).foregroundStyle(ModernPalette.inkSoft).frame(width: 28, alignment: .leading)
+            Text(unit).font(Face.medium(13)).foregroundStyle(ModernPalette.inkSoft)
+                .lineLimit(1).minimumScaleFactor(0.6).frame(width: 28, alignment: .leading)
         }
         .overlay(FocusRingIf(active: focused, radius: 12, color: ModernPalette.focus))
         .onAppear { position = value }
@@ -357,12 +359,13 @@ struct ModernDrum: View {
 struct ModernPreset: Identifiable {
     let number: String, unit: String, spoken: String, minutes: Int
     var id: Int { minutes }
-    static let all = [
-        ModernPreset(number: "15", unit: "min", spoken: "15 minuti", minutes: 15),
-        ModernPreset(number: "30", unit: "min", spoken: "30 minuti", minutes: 30),
-        ModernPreset(number: "1", unit: "ora", spoken: "1 ora", minutes: 60),
-        ModernPreset(number: "2", unit: "ore", spoken: "2 ore", minutes: 120)
-    ]
+    static func all(_ t: Strings) -> [ModernPreset] {
+        [15, 30, 60, 120].map { m in
+            m < 60
+                ? ModernPreset(number: "\(m)", unit: t.minutesUnit, spoken: t.durationSpoken(m), minutes: m)
+                : ModernPreset(number: "\(m / 60)", unit: t.hoursUnit(m / 60), spoken: t.durationSpoken(m), minutes: m)
+        }
+    }
 }
 
 private struct ModernPresetKey: View {
@@ -407,7 +410,7 @@ private struct ModernRail: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            ForEach(ModernPreset.all) { p in
+            ForEach(ModernPreset.all(c.t)) { p in
                 ModernPresetKey(preset: p, selected: c.duration == p.minutes) { c.setDuration(p.minutes) }
             }
         }
@@ -441,10 +444,18 @@ private struct ModernPicker: View {
 
     private var durationCard: some View {
         VStack(spacing: 6) {
-            HStack {
-                Text("Durata").font(Face.medium(14)).foregroundStyle(ModernPalette.inkSoft)
-                Spacer(minLength: 4)
-                endBadge
+            // Il badge con l'orario non si tronca mai: se non entra accanto a «Durata», va sotto.
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    durationLabel
+                    Spacer(minLength: 4)
+                    endBadge
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    durationLabel
+                    endBadge
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             Spacer(minLength: 0)
             ZStack {
@@ -453,8 +464,8 @@ private struct ModernPicker: View {
                     .frame(height: ModernDrum.rowH)
                     .mRaised(radius: 14, fill: ModernPalette.key, depth: 0.45)
                 HStack(spacing: 6) {
-                    ModernDrum(value: hours, values: Self.hourValues, unit: "ore", spoken: "Ore")
-                    ModernDrum(value: minutes, values: Self.minuteValues, unit: "min", spoken: "Minuti")
+                    ModernDrum(value: hours, values: Self.hourValues, unit: c.t.hoursUnit(2), spoken: c.t.hoursSpoken)
+                    ModernDrum(value: minutes, values: Self.minuteValues, unit: c.t.minutesUnit, spoken: c.t.minutesSpoken)
                 }
             }
             Spacer(minLength: 0)
@@ -464,11 +475,16 @@ private struct ModernPicker: View {
         .mRaised()
     }
 
+    private var durationLabel: some View {
+        Text(c.t.duration).font(Face.medium(14)).foregroundStyle(ModernPalette.inkSoft)
+    }
+
     private var endBadge: some View {
-        TimelineView(.everyMinute) { ctx in
-            let end = ctx.date.addingTimeInterval(TimeInterval(c.duration * 60))
-            Text("fino alle \(Clock.hm.string(from: end))")
+        EndClock(minutes: c.duration, locale: c.locale) { time in
+            Text(c.t.untilTime(time.text))
                 .font(Face.medium(12))
+                .lineLimit(1)
+                .fixedSize()
                 .foregroundStyle(ModernPalette.inkSoft)
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .background(Capsule().fill(Color.black.opacity(0.08)))
@@ -485,7 +501,7 @@ private struct ModernStatus: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(c.mode == .timed ? "Timer attivo" : "Continuo")
+            Text(c.mode == .timed ? c.t.timerActive : c.t.continuous)
                 .font(Face.medium(14)).foregroundStyle(ModernPalette.inkSoft)
             Spacer(minLength: 0)
             bigValue
@@ -497,8 +513,8 @@ private struct ModernStatus: View {
         .mRaised()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(c.mode == .timed
-            ? "Attivo, restano \(Controller.format(c.remaining))"
-            : "Attivo senza limite di tempo")
+            ? c.t.remaining(Controller.format(c.remaining))
+            : c.t.activeNoLimit)
     }
 
     @ViewBuilder private var bigValue: some View {
@@ -513,7 +529,7 @@ private struct ModernStatus: View {
     private var badge: some View {
         HStack(spacing: 7) {
             Circle().fill(tint).frame(width: 7, height: 7)
-            Text(c.mode == .timed ? badgeEnd : "Senza scadenza").font(Face.medium(13))
+            Text(c.mode == .timed ? badgeEnd : c.t.noEnd).font(Face.medium(13))
         }
         .padding(.horizontal, 11).padding(.vertical, 5)
         .background(Capsule().fill(tint.opacity(0.4)))
@@ -522,7 +538,7 @@ private struct ModernStatus: View {
 
     private var badgeEnd: String {
         guard let end = c.endDate else { return "" }
-        return "Fino alle \(Clock.hm.string(from: end))"
+        return c.t.untilTime(TimeText.end(end, locale: c.locale).text).capitalizedFirst
     }
 }
 
@@ -541,9 +557,9 @@ private struct ModernHeader: View {
 
     private var status: String {
         switch c.mode {
-        case .off: return "Spento"
-        case .timed: return "Attivo · timer"
-        case .indefinite: return "Attivo · continuo"
+        case .off: return c.t.statusOff
+        case .timed: return c.t.statusTimer
+        case .indefinite: return c.t.statusContinuous
         }
     }
 
@@ -608,21 +624,21 @@ struct ModernPopover: View {
         VStack(spacing: 8) {
             switch c.mode {
             case .off:
-                Button { c.startTimed() } label: { label("Avvia timer", icon: "timer", for: .timed) }
+                Button { c.startTimed() } label: { label(c.t.startTimer, icon: "timer", for: .timed) }
                     .buttonStyle(ModernDarkButtonStyle())
                     .keyboardShortcut(.defaultAction)
                     .allowsHitTesting(!c.busy)
                     .disabled(c.busy && c.pending != .timed)
-                Button { c.startIndefinite() } label: { label("Continuo", icon: "infinity", for: .indefinite) }
+                Button { c.startIndefinite() } label: { label(c.t.continuous, icon: "infinity", for: .indefinite) }
                     .buttonStyle(ModernDottedButtonStyle())
                     .allowsHitTesting(!c.busy)
                     .disabled(c.busy && c.pending != .indefinite)
             case .timed:
                 stopButton
-                Button { c.extend(by: 1800) } label: { label("Prolunga di 30 min", icon: "plus", for: nil) }
+                Button { c.extend(by: 1800) } label: { label(c.t.add30, icon: "plus", for: nil) }
                     .buttonStyle(ModernDottedButtonStyle())
             case .indefinite:
-                Text("Resta acceso finché non premi Stop")
+                Text(c.t.staysOnUntilStopped)
                     .font(Face.regular(13)).foregroundStyle(ModernPalette.inkSoft)
                     .frame(maxWidth: .infinity, minHeight: 44)
                 stopButton
@@ -634,7 +650,7 @@ struct ModernPopover: View {
         Button { c.stop() } label: {
             HStack(spacing: 8) {
                 Image(systemName: "stop.fill").font(.system(size: 14)).foregroundStyle(ModernPalette.stopIcon)
-                Text("Stop")
+                Text(c.t.stop)
             }
         }
         .buttonStyle(ModernDarkButtonStyle())
@@ -645,7 +661,7 @@ struct ModernPopover: View {
         HStack(spacing: 8) {
             if let target, c.pending == target {
                 Spinner()
-                Text("In attesa della password…")
+                Text(c.t.waitingPassword)
             } else {
                 Image(systemName: icon).font(.system(size: 15))
                 Text(text)
@@ -681,9 +697,9 @@ struct ModernPopover: View {
 
     private var note: some View {
         VStack(spacing: 2) {
-            Text("Il Mac resta acceso anche a coperchio chiuso.")
+            Text(c.t.lidNote)
             if !c.hasPermission && !c.isActive {
-                Text("Al primo avvio macOS chiede la password admin.")
+                Text(c.t.firstTimePassword)
             }
         }
         .font(Face.regular(12))
@@ -705,7 +721,7 @@ struct ModernPopover: View {
                         .foregroundStyle(ModernPalette.onDark)
                         .frame(width: 32, height: 32)
                         .background(ModernDarkSurface(radius: 11))
-                    Text("Impostazioni").fixedSize()
+                    Text(c.t.settings).fixedSize()
                     Image(systemName: "chevron.down")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(ModernPalette.inkSoft)
@@ -713,11 +729,11 @@ struct ModernPopover: View {
                 }
             }
             .buttonStyle(ModernRowButtonStyle())
-            .accessibilityValue(showSettings ? "aperte" : "chiuse")
+            .accessibilityValue(showSettings ? c.t.settingsOpen : c.t.settingsClosed)
             Spacer(minLength: 0)
             Button { NSApplication.shared.terminate(nil) } label: {
                 HStack(spacing: 8) {
-                    Text("Esci").fixedSize()
+                    Text(c.t.quit).fixedSize()
                     Text("⌘Q")
                         .font(Face.medium(11))
                         .foregroundStyle(ModernPalette.inkSoft)
@@ -733,18 +749,30 @@ struct ModernPopover: View {
 
     private var settings: some View {
         VStack(spacing: 2) {
-            ModernToggleRow(icon: "battery.25percent", title: "Protezione batteria",
-                            subtitle: "Ferma sotto il \(Battery.threshold)%", isOn: $c.stopOnLowBattery)
-            ModernToggleRow(icon: "display", title: "Schermo sempre acceso",
-                            subtitle: "Niente spegnimento per inattività", isOn: $c.keepDisplayOn)
-            ModernToggleRow(icon: "arrow.up.forward.app", title: "Avvia al login",
-                            isOn: Binding(get: { c.launchAtLogin }, set: { c.setLaunchAtLogin($0) }))
+            let t = c.t
+            ModernToggleRow(icon: "battery.25percent", title: t.batteryProtection,
+                            subtitle: t.batteryProtectionDetail(Battery.threshold), isOn: $c.stopOnLowBattery, t: t)
+            ModernToggleRow(icon: "thermometer.high", title: t.heatProtection,
+                            subtitle: t.heatProtectionDetail, isOn: $c.stopOnHeat, t: t)
+            ModernToggleRow(icon: "display", title: t.keepDisplayOn,
+                            subtitle: t.keepDisplayOnDetail, isOn: $c.keepDisplayOn, t: t)
+            ModernToggleRow(icon: "arrow.up.forward.app", title: t.launchAtLogin,
+                            isOn: Binding(get: { c.launchAtLogin }, set: { c.setLaunchAtLogin($0) }), t: t)
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 10) {
                     Image(systemName: "paintpalette").font(.system(size: 15)).frame(width: 22)
-                    Text("Stile").font(Face.medium(14))
+                    Text(t.style).font(Face.medium(14))
                 }
-                ModernSegmented(options: AppTheme.allCases, name: { $0.title }, selection: $c.theme)
+                ModernSegmented(options: AppTheme.allCases, name: { t.themeName($0) }, selection: $c.theme)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    Image(systemName: "globe").font(.system(size: 15)).frame(width: 22)
+                    Text(t.language).font(Face.medium(14))
+                }
+                ModernSegmented(options: AppLanguage.allCases, name: { t.languageName($0) }, selection: $c.language)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -752,7 +780,7 @@ struct ModernPopover: View {
                 Button { c.removePermission() } label: {
                     HStack(spacing: 10) {
                         Image(systemName: "lock.slash").font(.system(size: 15)).frame(width: 22)
-                        Text("Rimuovi permesso").frame(maxWidth: .infinity, alignment: .leading)
+                        Text(t.removePermission).frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 .buttonStyle(ModernRowButtonStyle())
