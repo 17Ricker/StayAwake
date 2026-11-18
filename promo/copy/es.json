@@ -1,0 +1,19 @@
+{
+  "lang": "es",
+  "hook1": "Cierras la tapa.",
+  "hook2": "Tu agente de IA se detiene. La descarga muere.",
+  "name": "StayAwake",
+  "tagline": "Cierra la tapa. Sigue trabajando.",
+  "howTitle": "Elige un tiempo, o déjalo encendido.",
+  "safe1": "Se detiene por debajo del 20 % de batería.",
+  "safe2": "Se detiene si el Mac se calienta demasiado.",
+  "safe3": "Aunque se cierre de golpe, el reposo vuelve.",
+  "themesTitle": "Tres estilos.",
+  "langsTitle": "Tres idiomas.",
+  "trust1": "Código abierto.",
+  "trust2": "Sin conexión a la red.",
+  "trust3": "Un único permiso, mínimo.",
+  "trust4": "Versiones verificables.",
+  "cta1": "Gratis para macOS 14+",
+  "cta2": "github.com/ricky7x/StayAwake"
+}

@@ -22,4 +22,5 @@ for lang in en it es; do
     if [ "$width" -gt 900 ]; then sips -Z 900 "$media/$f.png" > /dev/null; fi
   done
 done
+cp Resources/AppIcon.png promo/assets/ui/icon.png
 echo "Immagini pronte: promo/assets/ui/{en,it,es} e docs/media/{en,it,es}"

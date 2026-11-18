@@ -1,0 +1,19 @@
+{
+  "lang": "it",
+  "hook1": "Chiudi il coperchio.",
+  "hook2": "Il tuo agente AI si ferma. Il download muore.",
+  "name": "StayAwake",
+  "tagline": "Chiudi il coperchio. Continua a lavorare.",
+  "howTitle": "Scegli quanto tempo, o lascialo acceso.",
+  "safe1": "Si ferma sotto il 20% di batteria.",
+  "safe2": "Si ferma se il Mac si scalda troppo.",
+  "safe3": "Anche se crasha, lo sleep torna normale.",
+  "themesTitle": "Tre stili.",
+  "langsTitle": "Tre lingue.",
+  "trust1": "Open source.",
+  "trust2": "Nessuna rete.",
+  "trust3": "Un solo permesso, minimo.",
+  "trust4": "Release verificabili.",
+  "cta1": "Gratis per macOS 14+",
+  "cta2": "github.com/ricky7x/StayAwake"
+}

@@ -1,0 +1,19 @@
+{
+  "lang": "en",
+  "hook1": "You close the lid.",
+  "hook2": "Your AI agent stops. Your download dies.",
+  "name": "StayAwake",
+  "tagline": "Close the lid. Keep working.",
+  "howTitle": "Pick a time — or keep it on.",
+  "safe1": "Stops below 20% battery.",
+  "safe2": "Stops if your Mac gets too hot.",
+  "safe3": "Even if it crashes, sleep comes back.",
+  "themesTitle": "Three styles.",
+  "langsTitle": "Three languages.",
+  "trust1": "Open source.",
+  "trust2": "No network.",
+  "trust3": "One tiny, scoped permission.",
+  "trust4": "Verifiable releases.",
+  "cta1": "Free for macOS 14+",
+  "cta2": "github.com/ricky7x/StayAwake"
+}
