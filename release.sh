@@ -17,7 +17,7 @@ rm -rf "$OUT"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 for ARCH in arm64 x86_64; do
-  echo "Compilo per $ARCH…"
+  echo "Compilo per ${ARCH}…"
   swiftc -O -parse-as-library -swift-version 5 -target "$ARCH-apple-macos14" \
     Sources/*.swift -o "$OUT/StayAwake-$ARCH"
 done
