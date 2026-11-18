@@ -36,7 +36,7 @@ enum Permission {
     /// Script (da eseguire come root) che installa la regola di questo utente e, se è riuscito,
     /// toglie il vecchio file solo se contiene esattamente la vecchia regola di questo utente.
     static func installScript(uid: uid_t, userName: String) -> String {
-        let comment = isSafeUserName(userName) ? "# StayAwake: \(userName)" : "# StayAwake"
+        let comment = "# StayAwake"
         var script = "tmp=$(/usr/bin/mktemp /tmp/stayawake.XXXXXX)"
             + " && printf '%s\\n' '\(comment)' '\(rule(uid: uid))' > \"$tmp\""
             + " && /usr/sbin/visudo -cf \"$tmp\" >/dev/null"

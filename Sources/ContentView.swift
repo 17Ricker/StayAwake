@@ -55,16 +55,42 @@ struct MessageBanner: View {
 
     var body: some View {
         if let e = c.error {
-            banner(e, icon: "exclamationmark.triangle.fill", tint: Night.stopRed)
+            banner(e, icon: "exclamationmark.triangle.fill", tint: Night.stopRed, restoreAction: c.needsManualRestore)
         } else if let n = c.notice {
-            banner(n, icon: "info.circle", tint: Night.dim)
+            banner(n, icon: "info.circle", tint: Night.dim, restoreAction: false)
         }
     }
 
-    private func banner(_ text: String, icon: String, tint: Color) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: icon).foregroundStyle(tint)
-            Text(text).foregroundStyle(Night.ink)
+    private func banner(_ text: String, icon: String, tint: Color, restoreAction: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: icon).foregroundStyle(tint)
+                Text(text).foregroundStyle(Night.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Button { c.dismissMessage() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Night.dim)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(c.t.stop)
+            }
+            if restoreAction {
+                Button { c.retryRestoreSleep() } label: {
+                    HStack(spacing: 6) {
+                        if c.restoringSleep { Spinner(onLight: true) }
+                        Text(c.restoringSleep ? c.t.waitingPassword : c.t.restoreSleepNow)
+                            .font(Face.demi(12))
+                    }
+                    .foregroundStyle(Night.onAccent)
+                    .padding(.horizontal, 12)
+                    .frame(height: 28)
+                    .background(Capsule().fill(Night.orange))
+                }
+                .buttonStyle(.plain)
+                .disabled(c.busy)
+            }
         }
         .font(Face.medium(12.5))
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -72,7 +98,6 @@ struct MessageBanner: View {
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Night.well))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(0.08), lineWidth: 1))
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -215,6 +240,7 @@ struct SettingsPanel: View {
                     }
                 }
                 .buttonStyle(RowButtonStyle())
+                .disabled(c.busy)
             }
             Button { NSApplication.shared.terminate(nil) } label: {
                 HStack(spacing: 10) {

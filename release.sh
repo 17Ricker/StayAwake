@@ -26,6 +26,12 @@ rm "$OUT/StayAwake-arm64" "$OUT/StayAwake-x86_64"
 cp Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
+TAG="${VERSION:-${GITHUB_REF_NAME:-}}"
+TAG="${TAG#v}"
+if [[ "$TAG" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+  /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $TAG" "$APP/Contents/Info.plist"
+fi
+
 # Firma ad-hoc (gratuita, senza Developer ID) con hardened runtime.
 codesign --force --options runtime --sign - "$APP"
 

@@ -106,7 +106,8 @@ struct Strings: Sendable {
     let stoppedLowBattery: @Sendable (Int) -> String
     let stoppedHeat: String
     let cannotRestoreSleep: String
-    let loginItemError: @Sendable (String) -> String
+    let restoreSleepNow: String
+    let loginItemError: String
     let permissionRemoved: String
     let removeCancelled: String
     /// Prompt della password quando lo sleep va ripristinato ma la regola non c'è più.

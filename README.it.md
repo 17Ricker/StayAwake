@@ -72,37 +72,11 @@ StayAwake tiene il Mac acceso a coperchio chiuso, esattamente per il tempo che s
 
 **Impostazioni → Lingua**: Sistema, Italiano, English, Español. *Sistema* segue la lingua di macOS, oppure l'inglese se non è nessuna di queste. Il cambio è immediato.
 
-<!-- ## Guarda lo spot (video): si attiva dopo la prima release, quando lo spot è allegato -->
-
 ## Come funziona
 
-La prima volta che accendi StayAwake, macOS chiede una volta la password di amministratore. Da lì in poi StayAwake può accendere e spegnere lo sleep da sola, e solo quello:
+La prima volta che accendi StayAwake, macOS chiede una volta la password di amministratore per concedere un permesso limitato esclusivamente ad accendere e spegnere lo sleep di sistema (`pmset`). Da lì in poi, StayAwake funziona senza chiedere di nuovo la password.
 
-```mermaid
-sequenceDiagram
-    participant Tu
-    participant App as StayAwake
-    participant Mac as macOS
-    participant Root as sudo e pmset
-    Tu->>App: La accendi per la prima volta
-    App->>Mac: Chiede la password admin
-    Mac->>Root: Esegue lo script di installazione come root
-    Root->>Root: visudo controlla la regola
-    Root-->>App: Regola salvata in /etc/sudoers.d/stayawake-uid501
-    App->>Root: sudo -n pmset -a disablesleep 1
-    Root-->>App: Il Mac resta acceso, niente più password
-```
-
-Mentre è accesa, un piccolo processo sentinella controlla l'app. Se l'app sparisce, lo sleep torna:
-
-```mermaid
-flowchart LR
-    A[StayAwake si accende] --> B[Parte la sentinella]
-    B --> C{L'app è ancora aperta?}
-    C -- sì, ricontrolla fra 2 s --> C
-    C -- no, è crashata o chiusa a forza --> D[sudo -n pmset -a disablesleep 0]
-    D --> E[Il Mac può di nuovo andare in sleep]
-```
+Mentre è attiva, un piccolo processo di controllo sorveglia l'app: se StayAwake viene chiusa o crasha, lo sleep di macOS torna normale entro un paio di secondi. Per i dettagli tecnici leggi [SECURITY.md](SECURITY.md).
 
 ## Requisiti
 
@@ -139,7 +113,7 @@ cd StayAwake
 ./install.sh     # compila e installa in ~/Applicazioni
 ```
 
-`./release.sh` produce lo stesso zip universale firmato ad-hoc delle release. Lo spot e le immagini di questa pagina sono fatti dall'app vera: vedi `promo/`.
+`./release.sh` produce lo stesso zip universale firmato ad-hoc delle release.
 
 ## A cosa serve la password
 
@@ -172,8 +146,6 @@ Da sapere: anche le altre app che girano con il tuo utente possono usare questa 
    ```
 
 3. Esci da StayAwake e trascinala nel Cestino.
-
-Le prime versioni usavano un solo file, `/etc/sudoers.d/stayawake`. StayAwake lo toglie da sola la prima volta che la accendi, se contiene la tua vecchia regola; altrimenti puoi cancellarlo con `sudo rm /etc/sudoers.d/stayawake`.
 
 ## Sicurezza e limiti
 

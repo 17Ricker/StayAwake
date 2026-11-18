@@ -31,11 +31,12 @@ func stringsTests() {
     check([it.languageName(.system), en.languageName(.system), es.languageName(.system)] == ["Sistema", "System", "Sistema"],
           "«Sistema» tradotto")
 
-    // Sleep rimasto disattivato: i messaggi dicono il comando esatto per ripristinarlo
+    // Sleep rimasto disattivato: messaggi chiari e pulsante di ripristino presenti
     for s in [it, en, es] {
         check(!s.restorePrompt.isEmpty, "prompt di ripristino presente")
-        check(s.sleepStillDisabled.contains("sudo pmset -a disablesleep 0") && s.cannotRestoreSleep.contains("sudo pmset -a disablesleep 0"),
-              "messaggi con il comando di ripristino")
+        check(!s.restoreSleepNow.isEmpty, "etichetta pulsante ripristino presente")
+        check(!s.sleepStillDisabled.isEmpty && !s.cannotRestoreSleep.isEmpty, "messaggi di ripristino presenti")
+        check(!s.loginItemError.isEmpty, "messaggio errore login item presente")
     }
 
     // «fino alle» con l'articolo giusto davanti all'una

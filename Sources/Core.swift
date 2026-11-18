@@ -50,11 +50,14 @@ final class Controller: ObservableObject {
     }
     @Published var mode: Mode = .off
     @Published var pending: Mode?
+    @Published private(set) var removingPermission = false
+    @Published private(set) var restoringSleep = false
     @Published var remaining: TimeInterval = 0
     @Published var total: TimeInterval = 0
     @Published var endDate: Date?
     @Published var error: String?
     @Published var notice: String?
+    @Published var needsManualRestore = false
     @Published var hasPermission = false
     @Published var launchAtLogin = SMAppService.mainApp.status == .enabled
 
@@ -68,7 +71,7 @@ final class Controller: ObservableObject {
     var locale: Locale { language.locale }
 
     var isActive: Bool { mode != .off }
-    var busy: Bool { pending != nil }
+    var busy: Bool { pending != nil || removingPermission || restoringSleep }
 
     /// Quota di timer già trascorsa, da 0 a 1.
     var progress: Double {
@@ -119,11 +122,12 @@ final class Controller: ObservableObject {
         #if !PREVIEW
         // Se un'esecuzione precedente è stata interrotta, riporta lo sleep alla normalità
         // (le sue sentinelle non servono più). All'avvio non si chiede la password: se lo sleep
-        // è rimasto disattivato e il permesso non c'è più, lo si dice con il comando esatto.
+        // è rimasto disattivato e il permesso non c'è più, offre il ripristino con un clic.
         if Permission.setSleepDisabled(false) || !Permission.isSleepDisabled() {
             Sentinel.stopAll()
         } else {
             error = t.sleepStillDisabled
+            needsManualRestore = true
         }
         hasPermission = Permission.isGranted()
         NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
@@ -150,9 +154,7 @@ final class Controller: ObservableObject {
         case .off:
             setDuration(duration + minutes)
         case .timed:
-            let secs = TimeInterval(minutes * 60)
-            guard remaining + secs > 60 else { return }
-            extend(by: secs)
+            extend(by: TimeInterval(minutes * 60))
         case .indefinite:
             break
         }
@@ -173,9 +175,15 @@ final class Controller: ObservableObject {
 
     func extend(by seconds: TimeInterval) {
         guard mode == .timed, let end = endDate else { return }
-        endDate = end.addingTimeInterval(seconds)
-        total += seconds
-        remaining = endDate!.timeIntervalSinceNow
+        let maxSeconds = TimeInterval(Self.maxMinutes * 60)
+        let currentRemaining = max(0, end.timeIntervalSinceNow)
+        let targetRemaining = min(maxSeconds, currentRemaining + seconds)
+        guard targetRemaining > 60 else { return }
+        let appliedDelta = targetRemaining - currentRemaining
+        guard abs(appliedDelta) > 0.001 else { return }
+        endDate = Date().addingTimeInterval(targetRemaining)
+        total = min(maxSeconds, max(targetRemaining, total + appliedDelta))
+        remaining = targetRemaining
     }
 
     func stop(notice message: String? = nil) {
@@ -185,28 +193,67 @@ final class Controller: ObservableObject {
         mode = .off
         notice = message
         // Prima si ripristina, poi si fermano le sentinelle: se il ripristino fallisce restano lì.
-        if restoreSleep() { Sentinel.stopAll() } else { error = t.cannotRestoreSleep }
+        if restoreSleep() {
+            Sentinel.stopAll()
+            needsManualRestore = false
+        } else {
+            error = t.cannotRestoreSleep
+            needsManualRestore = true
+        }
     }
 
     func setLaunchAtLogin(_ on: Bool) {
         do {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {
-            self.error = t.loginItemError(error.localizedDescription)
+            self.error = t.loginItemError
+            self.needsManualRestore = false
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 
     func removePermission() {
-        if isActive { stop() }
-        error = nil; notice = nil
+        guard !busy else { return }
+        error = nil; notice = nil; needsManualRestore = false
+        if isActive {
+            stop()
+            guard error == nil else { return }
+        }
+        removingPermission = true
         Task {
             let prompt = t.removePrompt
             let ok = await Task.detached { Permission.remove(prompt: prompt) }.value
+            removingPermission = false
             hasPermission = Permission.isGranted()
             if ok { notice = t.permissionRemoved }
             else { error = t.removeCancelled }
         }
+    }
+
+    func retryRestoreSleep() {
+        guard !busy else { return }
+        restoringSleep = true
+        let prompt = t.restorePrompt
+        Task {
+            let ok = await Task.detached {
+                Permission.setSleepDisabled(false)
+                    || !Permission.isSleepDisabled()
+                    || Permission.restoreWithPassword(prompt: prompt)
+            }.value
+            restoringSleep = false
+            hasPermission = Permission.isGranted()
+            if ok {
+                Sentinel.stopAll()
+                error = nil
+                needsManualRestore = false
+            }
+        }
+    }
+
+    func dismissMessage() {
+        error = nil
+        notice = nil
+        needsManualRestore = false
     }
 
     // MARK: Interni
@@ -221,8 +268,8 @@ final class Controller: ObservableObject {
     }
 
     private func activate(_ target: Mode, _ prepare: @escaping @MainActor () -> Void) {
-        guard pending == nil else { return }
-        error = nil; notice = nil
+        guard !busy else { return }
+        error = nil; notice = nil; needsManualRestore = false
         if let reason = StartCheck.blocker(stopOnLowBattery: stopOnLowBattery, batteryLow: stopOnLowBattery && Battery.isLow(),
                                            stopOnHeat: stopOnHeat, thermal: ProcessInfo.processInfo.thermalState, t: t) {
             error = reason

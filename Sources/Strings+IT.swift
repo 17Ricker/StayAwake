@@ -69,11 +69,12 @@ extension Strings {
         tooHotToStart: "Il Mac è troppo caldo: lascialo raffreddare prima di attivare StayAwake.",
         stoppedLowBattery: { "Fermato: batteria sotto il \($0)%." },
         stoppedHeat: "Fermato: il Mac è troppo caldo.",
-        cannotRestoreSleep: "Non riesco a riportare lo sleep alla normalità. Nel Terminale: sudo pmset -a disablesleep 0",
-        loginItemError: { "Avvio al login non modificabile: \($0)" },
+        cannotRestoreSleep: "Non riesco a riportare lo sleep alla normalità. Ripristinalo con la password admin.",
+        restoreSleepNow: "Ripristina",
+        loginItemError: "Impossibile modificare l'avvio al login. Controlla Impostazioni di Sistema → Generali → Elementi login.",
         permissionRemoved: "Permesso rimosso. Verrà richiesto di nuovo al prossimo avvio.",
         removeCancelled: "Rimozione annullata. Il permesso è ancora attivo.",
         restorePrompt: "StayAwake deve riportare lo sleep del Mac alla normalità: il suo permesso è stato tolto.",
-        sleepStillDisabled: "Lo sleep del Mac è ancora disattivato. Nel Terminale: sudo pmset -a disablesleep 0"
+        sleepStillDisabled: "Lo sleep del Mac è rimasto disattivato da una sessione precedente."
     )
 }

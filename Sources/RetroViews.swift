@@ -365,28 +365,33 @@ private struct RetroSwitch: View {
 
     var body: some View {
         Button { action(!isOn) } label: {
-            ZStack(alignment: isOn ? .trailing : .leading) {
-                Capsule().fill(Retro.lcd)
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
-                HStack {
-                    if isOn { Circle().fill(Retro.orange).frame(width: 6, height: 6); Spacer() }
-                    else { Spacer(); Circle().fill(Retro.dotOff).frame(width: 6, height: 6) }
+            ZStack {
+                ZStack(alignment: isOn ? .trailing : .leading) {
+                    Capsule().fill(Retro.lcd)
+                        .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
+                    HStack {
+                        if isOn { Circle().fill(Retro.orange).frame(width: 6, height: 6); Spacer() }
+                        else { Spacer(); Circle().fill(Retro.dotOff).frame(width: 6, height: 6) }
+                    }
+                    .padding(.horizontal, 11)
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(vertical(Retro.key))
+                        .overlay(grip)
+                        .frame(width: 30, height: 22)
+                        .shadow(color: Color.black.opacity(0.4), radius: 2, x: 0, y: 1)
+                        .padding(3)
                 }
-                .padding(.horizontal, 11)
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(vertical(Retro.key))
-                    .overlay(grip)
-                    .frame(width: 30, height: 22)
-                    .shadow(color: Color.black.opacity(0.4), radius: 2, x: 0, y: 1)
-                    .padding(3)
+                .opacity(busy ? 0.35 : 1)
+                if busy { Spinner() }
             }
             .frame(width: 72, height: 28)
             .overlay(FocusRing(radius: 14))
         }
         .buttonStyle(PressScaleStyle())
+        .allowsHitTesting(!busy)
         .animation(.smooth(duration: 0.2), value: isOn)
         .accessibilityLabel(t.continuous)
-        .accessibilityValue(isOn ? t.toggleOn : t.toggleOff)
+        .accessibilityValue(busy ? t.waitingPassword : (isOn ? t.toggleOn : t.toggleOff))
         .accessibilityAddTraits(.isToggle)
     }
 

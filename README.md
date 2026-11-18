@@ -72,37 +72,11 @@ StayAwake keeps the Mac awake with the lid closed, for exactly as long as you ch
 
 **Settings → Language**: System, Italiano, English, Español. *System* follows your macOS language, or English if it's none of these. The change is immediate.
 
-<!-- ## Watch the spot (video): si attiva dopo la prima release, quando lo spot è allegato -->
-
 ## How it works
 
-The first time you turn StayAwake on, macOS asks for an administrator password once. From then on, StayAwake can switch sleep on and off by itself, and only that:
+The first time you turn StayAwake on, macOS asks for an administrator password once to grant a scoped rule limited strictly to turning system sleep on and off (`pmset`). From then on, StayAwake works without asking for your password again.
 
-```mermaid
-sequenceDiagram
-    participant You
-    participant App as StayAwake
-    participant Mac as macOS
-    participant Root as sudo and pmset
-    You->>App: Turn it on for the first time
-    App->>Mac: Ask for the admin password
-    Mac->>Root: Run the install script as root
-    Root->>Root: visudo checks the rule
-    Root-->>App: Rule saved in /etc/sudoers.d/stayawake-uid501
-    App->>Root: sudo -n pmset -a disablesleep 1
-    Root-->>App: Mac stays awake, no more passwords
-```
-
-While it's on, a small sentinel process watches the app. If the app disappears, sleep comes back:
-
-```mermaid
-flowchart LR
-    A[StayAwake turns on] --> B[Sentinel starts]
-    B --> C{Is the app still running?}
-    C -- yes, check again in 2 s --> C
-    C -- no, it crashed or was force quit --> D[sudo -n pmset -a disablesleep 0]
-    D --> E[The Mac can sleep again]
-```
+While active, a tiny background watchdog monitors the app: if StayAwake quits or crashes, macOS sleep is automatically restored within a couple of seconds. For the technical details, see [SECURITY.md](SECURITY.md).
 
 ## Requirements
 
@@ -139,7 +113,7 @@ cd StayAwake
 ./install.sh     # builds and installs to ~/Applications
 ```
 
-`./release.sh` builds the same universal, ad-hoc signed zip that the releases use. The spot and the images on this page are made from the real app: see `promo/`.
+`./release.sh` builds the same universal, ad-hoc signed zip that the releases use.
 
 ## What the password is for
 
@@ -172,8 +146,6 @@ Good to know: any app running as your user could also use this rule, but only to
    ```
 
 3. Quit StayAwake and drag it to the Trash.
-
-Early builds used a single file, `/etc/sudoers.d/stayawake`. StayAwake removes it automatically the first time you turn it on, if it contains your old rule; otherwise you can delete it with `sudo rm /etc/sudoers.d/stayawake`.
 
 ## Safety and limits
 

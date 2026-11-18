@@ -72,37 +72,11 @@ StayAwake mantiene el Mac encendido con la tapa cerrada, exactamente el tiempo q
 
 **Ajustes → Idioma**: Sistema, Italiano, English, Español. *Sistema* sigue el idioma de macOS, o el inglés si no es ninguno de estos. El cambio es inmediato.
 
-<!-- ## Mira el anuncio (video): si attiva dopo la prima release, quando lo spot è allegato -->
-
 ## Cómo funciona
 
-La primera vez que activas StayAwake, macOS pide una vez la contraseña de administrador. A partir de ahí, StayAwake puede activar y desactivar el reposo por sí sola, y solo eso:
+La primera vez que activas StayAwake, macOS pide una vez la contraseña de administrador para conceder un permiso limitado exclusivamente a activar y desactivar el reposo del sistema (`pmset`). A partir de ahí, StayAwake funciona sin volver a pedir la contraseña.
 
-```mermaid
-sequenceDiagram
-    participant Yo as Tú
-    participant App as StayAwake
-    participant Mac as macOS
-    participant Root as sudo y pmset
-    Yo->>App: La activas por primera vez
-    App->>Mac: Pide la contraseña de administrador
-    Mac->>Root: Ejecuta el script de instalación como root
-    Root->>Root: visudo comprueba la regla
-    Root-->>App: Regla guardada en /etc/sudoers.d/stayawake-uid501
-    App->>Root: sudo -n pmset -a disablesleep 1
-    Root-->>App: El Mac sigue encendido, sin más contraseñas
-```
-
-Mientras está activa, un pequeño proceso centinela vigila la app. Si la app desaparece, el reposo vuelve:
-
-```mermaid
-flowchart LR
-    A[StayAwake se activa] --> B[Arranca el centinela]
-    B --> C{¿Sigue abierta la app?}
-    C -- sí, vuelve a mirar en 2 s --> C
-    C -- no, se cerró de golpe o a la fuerza --> D[sudo -n pmset -a disablesleep 0]
-    D --> E[El Mac puede volver a entrar en reposo]
-```
+Mientras está activa, un pequeño proceso de vigilancia supervisa la app: si StayAwake se cierra o falla, el reposo de macOS vuelve a la normalidad en un par de segundos. Para ver los detalles técnicos, lee [SECURITY.md](SECURITY.md).
 
 ## Requisitos
 
@@ -139,7 +113,7 @@ cd StayAwake
 ./install.sh     # compila e instala en ~/Aplicaciones
 ```
 
-`./release.sh` genera el mismo zip universal con firma ad-hoc que usan las versiones publicadas. El anuncio y las imágenes de esta página salen de la app real: mira `promo/`.
+`./release.sh` genera el mismo zip universal con firma ad-hoc que usan las versiones publicadas.
 
 ## Para qué sirve la contraseña
 
@@ -172,8 +146,6 @@ Conviene saberlo: otras apps que se ejecutan con tu usuario también pueden usar
    ```
 
 3. Sal de StayAwake y arrástrala a la Papelera.
-
-Las primeras versiones usaban un solo archivo, `/etc/sudoers.d/stayawake`. StayAwake lo quita sola la primera vez que la activas, si contiene tu regla antigua; si no, puedes borrarlo con `sudo rm /etc/sudoers.d/stayawake`.
 
 ## Seguridad y límites
 

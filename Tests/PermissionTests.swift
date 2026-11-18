@@ -55,7 +55,7 @@ func permissionTests() {
         let status = runWithoutRoot(script, in: dir)
         let installed = dir + "/stayawake-uid501"
         check(status == 0, "installazione: exit 0")
-        check(read(installed) == "# StayAwake: mario\n" + rule + "\n", "installazione: contenuto esatto")
+        check(read(installed) == "# StayAwake\n" + rule + "\n", "installazione: contenuto esatto")
         check(shell("/usr/sbin/visudo", ["-cf", installed]).status == 0, "installazione: visudo accetta il file")
         let leftovers = (try? FileManager.default.contentsOfDirectory(atPath: dir))?.filter { $0.hasPrefix("stayawake.") } ?? ["?"]
         check(leftovers.isEmpty, "installazione: nessun file temporaneo rimasto")
@@ -85,14 +85,14 @@ func permissionTests() {
         check(read(dir + "/stayawake-uid501") == "# StayAwake\n" + rule + "\n", "nome con apice: regola installata")
     }
 
-    // Nome con il punto (comune su macOS): entra nel commento, la migrazione funziona,
+    // Nome con il punto (comune su macOS): migrazione funziona senza esporre il nome nel file,
     // e il nome del file resta senza punti
     do {
         let dotted = Permission.installScript(uid: 501, userName: "mario.rossi")
         let dir = tempDir("punto")
         try? (Permission.legacyRule(userName: "mario.rossi") + "\n").write(toFile: dir + "/stayawake", atomically: true, encoding: .utf8)
         check(runWithoutRoot(dotted, in: dir) == 0, "nome con punto: exit 0")
-        check(read(dir + "/stayawake-uid501") == "# StayAwake: mario.rossi\n" + rule + "\n", "nome con punto: regola installata")
+        check(read(dir + "/stayawake-uid501") == "# StayAwake\n" + rule + "\n", "nome con punto: regola installata")
         check(!FileManager.default.fileExists(atPath: dir + "/stayawake"), "nome con punto: vecchio file migrato")
     }
 

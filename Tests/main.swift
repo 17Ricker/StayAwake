@@ -43,6 +43,16 @@ if let i = CommandLine.arguments.firstIndex(of: "--sentinel-child"), CommandLine
 
 MainActor.assumeIsolated {
     check(Controller.clamp(7) == 5, "clamp arrotonda a 5")
+    let c = Controller()
+    c.mode = .timed
+    c.total = 3600
+    c.remaining = 3600
+    c.endDate = Date().addingTimeInterval(3600)
+    c.extend(by: TimeInterval(30 * 3600))
+    let maxSecs = TimeInterval(Controller.maxMinutes * 60)
+    check(c.remaining <= maxSecs + 0.5 && c.total <= maxSecs, "extend non supera le 24 ore")
+    c.extend(by: -TimeInterval(30 * 3600))
+    check(c.remaining > 60, "extend non scende sotto 1 minuto")
 }
 permissionTests()
 safetyTests()

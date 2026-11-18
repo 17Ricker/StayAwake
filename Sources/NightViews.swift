@@ -149,11 +149,6 @@ struct NightActive: View {
 
     private var card: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if c.mode == .timed {
-                Ruler(totalMinutes: c.total / 60)
-            } else {
-                Color.clear.frame(height: 14)
-            }
             SegmentBar(progress: c.mode == .timed ? c.progress : 1, tint: tint)
             Spacer(minLength: 0)
             HStack(alignment: .bottom, spacing: 8) {
@@ -216,37 +211,6 @@ struct SegmentBar: View {
             .init(color: Color.black, location: 0.88),
             .init(color: Color.clear, location: 1)
         ], startPoint: .leading, endPoint: .trailing))
-        .accessibilityHidden(true)
-    }
-}
-
-/// Numeri sopra la barra: minuti trascorsi a intervalli “tondi”.
-struct Ruler: View {
-    let totalMinutes: Double
-
-    private static let steps = [1, 2, 5, 10, 15, 30, 60, 120, 180, 240, 360, 480, 720]
-
-    private var marks: [Int] {
-        let step = Self.steps.first { totalMinutes / Double($0) <= 3.01 } ?? 720
-        var out: [Int] = []
-        var m = step
-        while Double(m) < totalMinutes * 0.96 {
-            out.append(m)
-            m += step
-        }
-        return out
-    }
-
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-            ForEach(marks, id: \.self) { m in
-                Text("\(m)")
-                    .font(Face.regular(11))
-                    .foregroundStyle(Night.dim)
-                    .position(x: CGFloat(Double(m) / totalMinutes * Double(SegmentBar.count)) * 10 - 2, y: 7)
-            }
-        }
-        .frame(width: CGFloat(SegmentBar.count) * 10 - 4, height: 14)
         .accessibilityHidden(true)
     }
 }

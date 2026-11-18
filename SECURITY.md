@@ -18,7 +18,7 @@ Rules for everything that runs as root:
 
 - It touches nothing outside its own temporary file in `/tmp` and `/etc/sudoers.d/`.
 - It uses only absolute paths (`/usr/bin/…`, `/bin/…`), so it doesn't depend on `PATH`.
-- No user-controlled text goes into the script. The rule uses your numeric user ID, and your user name appears only in a comment and in the check of the early-build file, and only if it contains letters, digits, `.`, `_` or `-`.
+- No user-controlled text goes into the sudoers rule. The rule uses only your numeric user ID, and your user name is used solely to check and remove the early-build file if it contains letters, digits, `.`, `_` or `-`.
 
 The code is in [`Sources/Permission.swift`](Sources/Permission.swift). The tests in [`Tests/PermissionTests.swift`](Tests/PermissionTests.swift) run these scripts without root, in a temporary folder.
 

@@ -598,7 +598,7 @@ struct ModernPopover: View {
 
             controls
             messages
-            note
+            if !c.hasPermission && !c.isActive { note }
             Groove(dark: ModernPalette.ink.opacity(0.14), light: Color.white.opacity(0.45))
             footer
             if showSettings { settings }
@@ -673,9 +673,35 @@ struct ModernPopover: View {
 
     @ViewBuilder private var messages: some View {
         if let e = c.error {
-            HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(ModernPalette.errorInk)
-                Text(e).foregroundStyle(ModernPalette.ink)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(ModernPalette.errorInk)
+                    Text(e).foregroundStyle(ModernPalette.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button { c.dismissMessage() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(ModernPalette.inkSoft)
+                            .frame(width: 20, height: 20)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(c.t.stop)
+                }
+                if c.needsManualRestore {
+                    Button { c.retryRestoreSleep() } label: {
+                        HStack(spacing: 6) {
+                            if c.restoringSleep { Spinner() }
+                            Text(c.restoringSleep ? c.t.waitingPassword : c.t.restoreSleepNow)
+                                .font(Face.demi(12))
+                        }
+                        .foregroundStyle(ModernPalette.onDark)
+                        .padding(.horizontal, 12)
+                        .frame(height: 28)
+                        .background(Capsule().fill(vertical(ModernPalette.dark)))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(c.busy)
+                }
             }
             .font(Face.medium(12.5))
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -686,6 +712,15 @@ struct ModernPopover: View {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "info.circle").foregroundStyle(ModernPalette.inkSoft)
                 Text(n).foregroundStyle(ModernPalette.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Button { c.dismissMessage() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(ModernPalette.inkSoft)
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(c.t.stop)
             }
             .font(Face.medium(12.5))
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -698,14 +733,11 @@ struct ModernPopover: View {
     private var note: some View {
         VStack(spacing: 2) {
             Text(c.t.lidNote)
-            if !c.hasPermission && !c.isActive {
-                Text(c.t.firstTimePassword)
-            }
+            Text(c.t.firstTimePassword)
         }
         .font(Face.regular(12))
         .foregroundStyle(ModernPalette.inkSoft)
         .multilineTextAlignment(.center)
-        .frame(height: 32)    // due righe: l'altezza non cambia al primo avvio né tra spento e attivo
     }
 
     // MARK: Piede e impostazioni
@@ -784,6 +816,7 @@ struct ModernPopover: View {
                     }
                 }
                 .buttonStyle(ModernRowButtonStyle())
+                .disabled(c.busy)
             }
         }
         .padding(6)

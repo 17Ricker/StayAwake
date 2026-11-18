@@ -1,22 +1,16 @@
-# Build e binari di prova (anche quelli di Preview/, che escono in build/)
+# Build e binari di prova
 build/
 
-# File di sistema
+# File locali e di sistema
 .DS_Store
-
-# Solo locale: note private e workspace dei piani
 private/
 .superpowers/
 .claude/
-
-# Note di progetto (design, piani): solo locali
 docs/superpowers/
 
-# Promo: rese, immagini generate e dipendenze (si rigenerano)
+# Promo: file generati e dipendenze
 promo/out/
 promo/assets/ui/
 promo/node_modules/
-
-# HyperFrames: cartelle di lavoro locali
 promo/.hyperframes/
 promo/.thumbnails/

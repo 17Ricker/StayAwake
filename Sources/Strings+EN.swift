@@ -69,11 +69,12 @@ extension Strings {
         tooHotToStart: "Your Mac is too hot: let it cool down before turning StayAwake on.",
         stoppedLowBattery: { "Stopped: battery below \($0)%." },
         stoppedHeat: "Stopped: the Mac is too hot.",
-        cannotRestoreSleep: "Couldn't turn sleep back on. In Terminal: sudo pmset -a disablesleep 0",
-        loginItemError: { "Couldn't change Open at login: \($0)" },
+        cannotRestoreSleep: "Couldn't turn sleep back on. Restore it with your admin password.",
+        restoreSleepNow: "Restore",
+        loginItemError: "Couldn't change Open at login. Check System Settings → General → Login Items.",
         permissionRemoved: "Permission removed. It will be requested again next time.",
         removeCancelled: "Removal cancelled. The permission is still active.",
         restorePrompt: "StayAwake needs to turn your Mac's sleep back on: its permission was removed.",
-        sleepStillDisabled: "Your Mac's sleep is still turned off. In Terminal: sudo pmset -a disablesleep 0"
+        sleepStillDisabled: "Your Mac's sleep was left turned off from a previous session."
     )
 }
