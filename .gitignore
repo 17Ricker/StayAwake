@@ -11,3 +11,8 @@ private/
 
 # Note di progetto (design, piani): solo locali
 docs/superpowers/
+
+# Promo: rese, immagini generate e dipendenze (si rigenerano)
+promo/out/
+promo/assets/ui/
+promo/node_modules/

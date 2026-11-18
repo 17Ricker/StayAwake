@@ -1,5 +1,5 @@
 // Anteprima offline: disegna il popover in PNG senza avviare l'app né toccare pmset.
-// Uso: swiftc -D PREVIEW Sources/*.swift Preview/main.swift -o build/preview && build/preview <cartella> [--lang it|en|es] [--orari]
+// Uso: swiftc -D PREVIEW Sources/*.swift Preview/main.swift -o build/preview && build/preview <cartella> [--lang it|en|es] [--orari | --promo]
 import SwiftUI
 import AppKit
 
@@ -50,6 +50,51 @@ MainActor.assumeIsolated {
         if mode == .timed { c.total = 3600; c.remaining = 3000; c.endDate = Date().addingTimeInterval(3000) }
         return NSHostingView(rootView: ContentView(c: c)).fittingSize.height
     }
+    // `--promo`: un PNG per ogni stato dell'app (sfondo trasparente, scala 2) per la promo e i README.
+    // Orario fisso (oggi alle 21:30, 24 h): le immagini sono uguali a ogni esecuzione.
+    if args.contains("--promo") {
+        let base = Calendar.current.date(bySettingHour: 21, minute: 30, second: 0, of: Date())!
+        Clock.fixedNow = base
+        TimeText.forced12h = false
+        @MainActor func card(_ v: ContentView) -> some View {
+            v.clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        for m in [30, 60, 90, 120] {
+            save(card(make { c in c.theme = .night; c.duration = m }), as: "night-idle-\(m)")
+        }
+        for (i, r) in [7198, 7197, 7196, 7195].enumerated() {
+            save(card(make { c in
+                c.theme = .night; c.mode = .timed; c.total = 7200; c.remaining = TimeInterval(r)
+                c.endDate = base.addingTimeInterval(TimeInterval(r))
+            }), as: "night-timed-\(i + 1)")
+        }
+        save(card(make { c in c.theme = .night; c.mode = .indefinite }), as: "night-continuous")
+        save(card(make { c in c.theme = .retro; c.duration = 90 }), as: "retro-idle")
+        save(card(make { c in c.theme = .modern; c.duration = 90 }), as: "modern-idle")
+        save(card(make(settings: true) { c in c.theme = .night; c.duration = 90 }), as: "settings")
+
+        // Icona della barra dei menu su trasparente, a 4×: a riposo in bianco, attiva con i suoi colori
+        @MainActor func savePNG(_ image: NSImage, _ name: String, white: Bool) {
+            let scale: CGFloat = 4, size = image.size
+            let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width * scale), pixelsHigh: Int(size.height * scale),
+                                       bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                       colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+            rep.size = size
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+            let rect = NSRect(origin: .zero, size: size)
+            image.draw(in: rect)
+            if white { NSColor.white.set(); rect.fill(using: .sourceAtop) }
+            NSGraphicsContext.restoreGraphicsState()
+            try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: out + "/" + name + ".png"))
+            print("scritto", name)
+        }
+        let t = Strings.for(lang)
+        savePNG(MenuBarArt.idle(t.summaryOff), "menubar-idle", white: true)
+        savePNG(MenuBarArt.pill(timed: true, progress: 0.35, title: "1h 18m", summary: t.summaryTimed("1h 18m")), "menubar-timed", white: false)
+        return
+    }
+
     // `--orari`: per i casi più larghi (12:58 e 22:58 a 12 h, 23:58 a 24 h) una riga con Notte, Retro e
     // Modern da fermi (primo avvio) e con il timer. L'orario «fino alle» deve vedersi intero ovunque.
     if args.contains("--orari") {
